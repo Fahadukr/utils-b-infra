@@ -314,5 +314,5 @@ def date_formatter(date,
     try:
         date = datetime.fromisoformat(date.rstrip('Z'))
         return date.strftime('%Y-%m-%d %H:%M:%S')
-    except (ValueError, TypeError):
+    except (ValueError, TypeError, AttributeError):
         return np.nan

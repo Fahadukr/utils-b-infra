@@ -20,11 +20,11 @@ class TextTranslator:
         self.google_project_id = google_project_id
 
     @retry_with_timeout(retries=3, timeout=120, initial_delay=20, backoff=2)
-    def translate_text_with_google(self,
-                                   text_to_translate: str,
-                                   source_language: str,
-                                   target_lang: str,
-                                   mime_type: str) -> str:
+    def _translate_text_with_google(self,
+                                    text_to_translate: str,
+                                    source_language: str,
+                                    target_lang: str,
+                                    mime_type: str) -> str:
         """Translates text into the target language.
 
         Target must be an ISO 639-1 language code.
@@ -49,11 +49,11 @@ class TextTranslator:
         return translated_text
 
     @retry_with_timeout(retries=2, timeout=120, initial_delay=30, backoff=2)
-    def translate_text_with_deepl(self,
-                                  text_to_translate: str,
-                                  source_lang: str,
-                                  target_lang: str,
-                                  tag_handling: str = None):
+    def _translate_text_with_deepl(self,
+                                   text_to_translate: str,
+                                   source_lang: str,
+                                   target_lang: str,
+                                   tag_handling: str = None):
         result = self.deepl_translate_client.translate_text(
             text=text_to_translate,
             source_lang=source_lang.upper(),
@@ -99,14 +99,14 @@ class TextTranslator:
             if target_langs and lang not in target_langs:
                 continue
             if engine == "google":
-                translated_text = self.translate_text_with_google(
+                translated_text = self._translate_text_with_google(
                     text_to_translate=text_,
                     source_language=source_language,
                     target_lang=lang,
                     mime_type=google_mime_type
                 )
             elif engine == "deepl":
-                translated_text = self.translate_text_with_deepl(
+                translated_text = self._translate_text_with_deepl(
                     text_to_translate=text_,
                     source_lang=source_language,
                     target_lang=lang,
