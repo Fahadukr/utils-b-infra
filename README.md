@@ -18,6 +18,12 @@ You can install `utils-b-infra` using pip:
 pip install utils-b-infra
 ```
 
+To include the translation utilities:
+
+```bash
+pip install utils-b-infra[translation]
+````
+
 ## Structure
 
 The library is organized into the following modules:
@@ -75,6 +81,46 @@ with sqlalchemy_client.connect() as db_connection:
         dtype=None,
         chunk_size=20_000
     )
+```
+
+Translation Utilities
+To use the translation utilities, you need to install the translation extras and set up the necessary environment
+variables for Google Translate:
+
+```bash
+pip install utils-b-infra[translation]
+```
+
+```python
+import os
+from utils_b_infra.translation import TextTranslator
+
+# Set up Google Cloud credentials
+os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'path/to/google_service_account.json'
+
+deepl_api_key = 'your-deepl-api-key'
+languages = {
+   'ru': 'https://ru.example.com',
+   'ar': 'https://ar.example.com',
+   'de': 'https://de.example.com',
+   'es': 'https://es.example.com',
+   'fr': 'https://fr.example.com',
+   'uk': 'https://ua.example.com'
+}
+google_project_id = 'your-google-project-id'
+
+translator = TextTranslator(deepl_api_key=deepl_api_key, languages=languages, google_project_id=google_project_id)
+
+text_to_translate = "Hello, world!"
+translations = translator.get_translations(
+   text_=text_to_translate,
+   source_language="en",
+   target_langs=["ru", "ar", "de"],
+   engine="google"
+)
+
+for lang, translated_text in translations.items():
+   print(f"{lang}: {translated_text}")
 ```
 
 Generic Utilities

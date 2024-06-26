@@ -8,7 +8,7 @@ with open('CHANGELOG.md', 'r') as ch:
 
 setup(
     name="utils-B-infra",
-    version="0.2.3",
+    version="0.3.0",
     author="Fahad Mawlood",
     author_email="fahadukr@gmail.com",
     description="A collection of utility functions and classes for Python projects.",
@@ -20,15 +20,19 @@ setup(
         "SQLAlchemy >= 2.0.0",
         "pandas >= 2.0.0",
         "numpy < 2.0.0",
-        "google-cloud-translate >= 3.12.0",
         "openai >= 1.11.1",
         "slack-sdk",
         "tiktoken",
-        "deepl",
         "google-api-python-client",
         "google-auth-httplib2",
         "google-auth-oauthlib"
     ],
+    extras_require={
+        'translation': [
+            "google-cloud-translate >= 3.12.0",
+            "deepl"
+        ]
+    },
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",

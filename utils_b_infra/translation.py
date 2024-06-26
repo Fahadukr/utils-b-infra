@@ -1,20 +1,34 @@
 from typing import Literal
 
-import deepl
-from google.cloud.translate_v3 import TranslationServiceClient as GoogleTranslationServiceClient
-from google.cloud.translate_v3.types import TranslateTextRequest
 from utils_b_infra.generic import retry_with_timeout
 
 
 class TextTranslator:
     """
     for google translate, set GOOGLE_APPLICATION_CREDENTIALS env variable
-    to the path of the google service account json file before using this class
+    to the path of the google service account json file before using this class:
     os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = join(current_path, 'google_service_account.json')
+
+    Requires:
+        the utils-b-infra package with the translation extras:
+        pip install utils-b-infra[translation]
+
+    Parameters:
+        deepl_api_key (str): API key for DeepL.
+        languages (dict[str, str]): Supported language mappings.
+        google_project_id (str): Google Cloud project ID.
     """
 
     def __init__(self, deepl_api_key: str, languages: dict[str, str], google_project_id: str):
+        try:
+            import deepl
+            from google.cloud.translate_v3 import TranslationServiceClient as GoogleTranslationServiceClient
+            from google.cloud.translate_v3.types import TranslateTextRequest
+        except ImportError:
+            raise ImportError(
+                "Please install the translation dependencies with: pip install utils-b-infra[translation]")
         self.google_translate_client = GoogleTranslationServiceClient()
+        self.TranslateTextRequest = TranslateTextRequest
         self.deepl_translate_client = deepl.Translator(deepl_api_key)
         self.languages = languages
         self.google_project_id = google_project_id
@@ -32,7 +46,7 @@ class TextTranslator:
         """
 
         # Prepare the request
-        request = TranslateTextRequest(
+        request = self.TranslateTextRequest(
             parent=f"projects/{self.google_project_id}",
             contents=[text_to_translate],
             mime_type=mime_type,  # mime types: text/plain, text/html

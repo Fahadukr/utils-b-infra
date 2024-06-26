@@ -1,5 +1,11 @@
 # Changelog
 
+[0.3.0] - 2024-06-27
+
+### Changed
+
+Split the library into main and extra modules, including optional translation utilities.
+
 ## [0.2.0] - 2024-06-26:
 
 ### Added
