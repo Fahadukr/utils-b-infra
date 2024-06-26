@@ -244,21 +244,21 @@ def get_sql_ddl_commands_from_file(file_name: str, ddl_files_paths: dict[str, st
     return sql_commands
 
 
-def is_numeric_value(s):
+def is_numeric_value(value):
     """
-    Check if a string is a numeric value
+    Check if a value is numeric:
+    True: 123, 123.456, -123, -123.456, '123', '123.456', '-123'
     """
-    if not s:
+    if not value and value != 0:
         return False
 
-    s = str(s).strip()
+    value = str(value).strip()
 
     pattern = r"^-?\d*\.?\d*$"
 
-    if re.match(pattern, s):
+    if re.match(pattern, value):
         return True
-    else:
-        return False
+    return False
 
 
 def run_func_in_background(task, *args, **kwargs):
@@ -266,53 +266,54 @@ def run_func_in_background(task, *args, **kwargs):
     threading.Thread(target=task, args=args, kwargs=kwargs).start()
 
 
-def date_formatter(date,
-                   is_event_time: bool = False,
-                   is_mongo_id_object: bool = False,
-                   is_mongo_time_object: bool = False):
+def date_formatter(date, is_event_time=False, is_mongo_id_object=False, is_mongo_time_object=False):
     """
-    Extract date in format 'YYYY-MM-DD HH:MM:SS' from different date formats including mongoDB date objects
-    :param date: str, int, dict, datetime or mongoDB date object
+    Extract date in format 'YYYY-MM-DD HH:MM:SS' from different date formats including MongoDB date objects.
+    :param date: str, int, dict, datetime or MongoDB date object
     :param is_event_time: if it's an event time object in the format 'YYYY-MM-DD HH:MM:SS GMT'
-    :param is_mongo_id_object: if it's a mongoDB id object string
-    :param is_mongo_time_object: if it's a mongoDB date object
-    :return: string in the format 'YYYY-MM-DD HH:MM:SS'
+    :param is_mongo_id_object: if it's a MongoDB ID object string
+    :param is_mongo_time_object: if it's a MongoDB date object
+    :return: string in the format 'YYYY-MM-DD HH:MM:SS' or None if invalid
     """
-    if not date or date is pd.NaT or date is np.nan or date == 'nan' or date == 'NaT' or date == 'None':
+    if not date or date in {pd.NaT, np.nan, 'nan', 'NaT', 'None'}:
         return None
 
-    if isinstance(date, datetime):
-        return date.strftime('%Y-%m-%d %H:%M:%S')
-
-    if is_event_time:
-        date = date.replace('GMT', '').strip().split('.')[0]
-        date = datetime.strptime(date, "%Y-%m-%d %H:%M:%S")
-        return date
-
-    if is_mongo_time_object:
-        date = datetime.strptime(date, '%Y-%m-%dT%H:%M:%S.%f+00:00')
-        date = date.strftime('%Y-%m-%d %H:%M:%S')
-        return date
-
-    if is_mongo_id_object:
-        return ObjectId(date).generation_time.strftime('%Y-%m-%d %H-%M-%S')
-
-    if isinstance(date, dict):
-        if date.get('milliseconds'):
-            date = date.get('milliseconds')
-        elif date.get('$date'):
-            date = date.get('$date').get('$numberLong')
-        else:
-            raise KeyError
-
-    if isinstance(date, int) or str(date).isdigit():
-        date = int(date)
-        if len(str(int(date))) > 10:
-            date = int(str(date)[:10])
-        return datetime.utcfromtimestamp(date).strftime('%Y-%m-%d %H:%M:%S')
-
+    # Handle different cases based on type of the 'date' and flags
     try:
-        date = datetime.fromisoformat(date.rstrip('Z'))
-        return date.strftime('%Y-%m-%d %H:%M:%S')
-    except (ValueError, TypeError, AttributeError):
-        return np.nan
+        if isinstance(date, datetime):
+            return date.strftime('%Y-%m-%d %H:%M:%S')
+
+        if is_event_time:
+            # Assumes date is a string from which 'GMT' and fractional seconds can be removed
+            return datetime.strptime(date.replace('GMT', '').strip().split('.')[0], "%Y-%m-%d %H:%M:%S").strftime(
+                '%Y-%m-%d %H:%M:%S')
+
+        if is_mongo_time_object:
+            # Parse MongoDB ISO date format
+            return datetime.strptime(date, '%Y-%m-%dT%H:%M:%S.%f+00:00').strftime('%Y-%m-%d %H:%M:%S')
+
+        if is_mongo_id_object:
+            # Convert from MongoDB ObjectId
+            return ObjectId(date).generation_time.strftime('%Y-%m-%d %H:%M:%S')
+
+        if isinstance(date, dict):
+            # Handle dict containing date details
+            date = date.get('milliseconds') or date.get('$date', {}).get('$numberLong')
+            date = int(float(date))
+
+        if is_numeric_value(date):
+            # Handle numeric timestamps
+            if len(str(date)) > 10:
+                date = str(date)[:10]
+            timestamp = int(float(date))
+            return datetime.utcfromtimestamp(timestamp).strftime('%Y-%m-%d %H:%M:%S')
+
+        if isinstance(date, str):
+            # Try parsing ISO format or other standard date strings
+            return datetime.fromisoformat(date.rstrip('Z')).strftime('%Y-%m-%d %H:%M:%S')
+
+    except (ValueError, TypeError, KeyError):
+        print(f"Failed to parse date: {date}")
+        return None
+
+    return None
