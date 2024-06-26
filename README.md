@@ -1,9 +1,6 @@
-# utils-b-infra
-
-`utils-b-infra` is a collection of utility functions and classes designed to streamline and enhance your Python
-projects. The
-library is organized into several modules, each catering to different categories of utilities, including logging, client
-interactions, data manipulation with pandas, and general-purpose functions.
+Collection of utility functions and classes designed to enhance Python projects.
+The library is organized into several modules, including logging, client interactions,
+data manipulation with pandas, and general-purpose functions.
 
 # Supported Python Versions
 
