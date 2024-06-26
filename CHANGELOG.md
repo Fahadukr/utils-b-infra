@@ -1,0 +1,23 @@
+# Changelog
+
+## [0.2.0] - 2024-06-26:
+
+### Added
+
+- Support for `google-cloud-translate` V3 API.
+- Support for OpenAI modules `gpt-4o` and `gpt-4o-2024-05-13` in `ai.calculate_openai_price`
+
+### Fixed
+
+- Issue with json parsing in `ai.TextGenerator.get_ai_response`.
+
+### Changed
+
+- Default openai model to `gpt-4o` in `ai.TextGenerator.get_ai_response`.
+- Updated Readme file with more examples.
+
+## [0.1.0] - 2024-06-25 initial release
+
+### Added
+
+- Initial release of the package.
