@@ -5,7 +5,7 @@ from utils_b_infra.generic import retry_with_timeout
 
 class TextTranslator:
     """
-    for google translate, set GOOGLE_APPLICATION_CREDENTIALS env variable
+    To use google translate, set GOOGLE_APPLICATION_CREDENTIALS env variable
     to the path of the google service account json file before using this class:
     os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = join(current_path, 'google_service_account.json')
 
@@ -19,19 +19,28 @@ class TextTranslator:
         google_project_id (str): Google Cloud project ID.
     """
 
-    def __init__(self, deepl_api_key: str, languages: dict[str, str], google_project_id: str):
-        try:
-            import deepl
-            from google.cloud.translate_v3 import TranslationServiceClient as GoogleTranslationServiceClient
-            from google.cloud.translate_v3.types import TranslateTextRequest
-        except ImportError:
-            raise ImportError(
-                "Please install the translation dependencies with: pip install utils-b-infra[translation]")
-        self.google_translate_client = GoogleTranslationServiceClient()
-        self.TranslateTextRequest = TranslateTextRequest
-        self.deepl_translate_client = deepl.Translator(deepl_api_key)
+    def __init__(self, languages: dict[str, str], deepl_api_key: str = None, google_project_id: str = None):
+        if not deepl_api_key and not google_project_id:
+            raise ValueError("Either 'deepl_api_key' or 'google_project_id' must be provided.")
+
         self.languages = languages
-        self.google_project_id = google_project_id
+        self.deepl_translate_client = None
+        self.google_translate_client = None
+
+        if deepl_api_key:
+            import deepl
+            self.deepl_translate_client = deepl.Translator(deepl_api_key)
+
+        if google_project_id:
+            try:
+                from google.cloud.translate_v3 import TranslationServiceClient as GoogleTranslationServiceClient
+                from google.cloud.translate_v3.types import TranslateTextRequest
+            except ImportError:
+                raise ImportError(
+                    "Please install the translation dependencies with: pip install utils-b-infra[translation]")
+            self.TranslateTextRequest = TranslateTextRequest
+            self.google_translate_client = GoogleTranslationServiceClient()
+            self.google_project_id = google_project_id
 
     @retry_with_timeout(retries=3, timeout=120, initial_delay=20, backoff=2)
     def _translate_text_with_google(self,
