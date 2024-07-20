@@ -82,7 +82,9 @@ class Cache:
             return await func(*args, **kwargs)
         else:
             loop = asyncio.get_event_loop()
-            return await loop.run_in_executor(None, func, *kwargs)
+            from functools import partial
+            func_part = partial(func, *args, **kwargs)
+            return await loop.run_in_executor(None, func_part)
 
     def cached(self,
                timeout: int = None,
