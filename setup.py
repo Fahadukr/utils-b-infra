@@ -8,7 +8,7 @@ with open('CHANGELOG.md', 'r') as ch:
 
 setup(
     name="utils-B-infra",
-    version="0.4.0",
+    version="0.4.2",
     author="Fahad Mawlood",
     author_email="fahadukr@gmail.com",
     description="A collection of utility functions and classes for Python projects.",
@@ -17,17 +17,17 @@ setup(
     url="https://github.com/Fahadukr/utils-b-infra",
     packages=find_packages(),
     install_requires=[
-        "SQLAlchemy >= 2.0.0",
-        "pandas >= 2.0.0",
+        "SQLAlchemy",
+        "pandas",
         "numpy < 2.0.0",
         "openai >= 1.11.1",
-        "motor"
-        "pendulum"
+        "motor",
+        "pendulum",
         "slack-sdk",
         "tiktoken",
         "google-api-python-client",
         "google-auth-httplib2",
-        "google-auth-oauthlib"
+        "google-auth-oauthlib",
     ],
     extras_require={
         'translation': [
