@@ -1,23 +1,15 @@
 import datetime
 import json
 from decimal import Decimal
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    TypeVar,
-)
+from typing import Any, Callable, Dict, TypeVar
 
 import pendulum
-from fastapi.encoders import jsonable_encoder
-from starlette.responses import JSONResponse
 
 _T = TypeVar("_T", bound=type)
 
 CONVERTERS: Dict[str, Callable[[str], Any]] = {
-    # Pendulum 3.0.0 adds parse to __all__, at which point these ignores can be removed
-    "date": lambda x: pendulum.parse(x, exact=True),  # type: ignore[attr-defined]
-    "datetime": lambda x: pendulum.parse(x, exact=True),  # type: ignore[attr-defined]
+    "date": lambda x: pendulum.parse(x, exact=True),
+    "datetime": lambda x: pendulum.parse(x, exact=True),
     "decimal": Decimal,
 }
 
@@ -42,7 +34,7 @@ class JsonEncoder(json.JSONEncoder):
         elif isinstance(o, Decimal):
             return {"val": str(o), "_spec_type": "decimal"}
         else:
-            return jsonable_encoder(o)
+            return super().default(o)
 
 
 class Coder:
@@ -62,8 +54,6 @@ class Coder:
 class JsonCoder(Coder):
     @classmethod
     def encode(cls, value: Any) -> bytes:
-        if isinstance(value, JSONResponse):
-            return value.body
         return json.dumps(value, cls=JsonEncoder).encode()
 
     @classmethod

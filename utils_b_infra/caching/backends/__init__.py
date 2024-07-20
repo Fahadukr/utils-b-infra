@@ -1,5 +1,5 @@
-# import each backend in turn and add to __all__. This syntax
-# is explicitly supported by type checkers, while more dynamic
-# syntax would not be recognised.
+from utils_b_infra.caching.backends.mongocache import MongoCache
+from utils_b_infra.caching.backends.rediscache import RedisCache
+from utils_b_infra.caching.backends.simplecache import SimpleCache
 
 __all__ = ["BaseCache", "SimpleCache", "RedisCache", "MongoCache"]

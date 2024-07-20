@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from typing import Optional, Tuple
 
 import time
-from utils_b_infra.caching.base import BaseCache
+from utils_b_infra.caching.backends.base import BaseCache
 
 
 @dataclass

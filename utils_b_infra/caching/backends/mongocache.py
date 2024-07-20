@@ -5,7 +5,7 @@ from urllib.parse import urlparse
 
 import pymongo
 from motor.motor_asyncio import AsyncIOMotorClient
-from utils_b_infra.caching.base import BaseCache
+from utils_b_infra.caching.backends.base import BaseCache
 
 
 class MongoCache(BaseCache):

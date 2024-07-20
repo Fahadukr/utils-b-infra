@@ -1,3 +1,3 @@
-from . import ai, generic, logging, pandas, services, translation
+from . import ai, generic, logging, pandas, services, translation, cache
 
-__all__ = ["ai", "generic", "logging", "pandas", "services", "translation"]
+__all__ = ["ai", "generic", "logging", "pandas", "services", "translation", "cache"]

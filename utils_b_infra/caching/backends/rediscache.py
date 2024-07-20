@@ -1,6 +1,6 @@
 from redis.asyncio import Redis
 from redis.asyncio.connection import ConnectionPool
-from utils_b_infra.caching.base import BaseCache
+from utils_b_infra.caching.backends.base import BaseCache
 
 
 class RedisCache(BaseCache):
