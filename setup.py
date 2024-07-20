@@ -8,7 +8,7 @@ with open('CHANGELOG.md', 'r') as ch:
 
 setup(
     name="utils-B-infra",
-    version="0.4.3",
+    version="0.4.4",
     author="Fahad Mawlood",
     author_email="fahadukr@gmail.com",
     description="A collection of utility functions and classes for Python projects.",
@@ -21,6 +21,7 @@ setup(
         "pandas",
         "numpy < 2.0.0",
         "openai >= 1.11.1",
+        "redis",
         "motor",
         "pendulum",
         "slack-sdk",
