@@ -1,0 +1,23 @@
+# Include all markdown and text files
+include *.md
+include *.txt
+
+# Include specific files
+include LICENSE
+include CHANGELOG.md
+
+# Include all files in the 'examples' directory
+recursive-include examples *
+
+# Include all files in the 'utils_b_infra' directory
+recursive-include utils_b_infra *
+
+# Exclude specific patterns and files
+global-exclude *__pycache__*
+global-exclude *.pyc
+global-exclude test_app.py
+
+# Exclude entire directories
+prune build
+prune dist
+prune utils_b_infra.egg-info

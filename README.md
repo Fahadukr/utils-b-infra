@@ -29,11 +29,12 @@ pip install utils-b-infra[translation]
 The library is organized into the following modules:
 
 1. logging.py: Utilities for logging with SlackAPI and writing to a file.
-2. ai.py: Utilities for working with AI models, such as token count, tokenization, and text generation.
-3. translation.py: Utilities for working with translation APIs (Supported Google Translate and DeepL).
-4. services.py: Services-related utilities, such as creating google service.
-5. pandas.py: Utilities for working with pandas dataframes, (df cleaning, insertion into databases...)
-6. generic.py: Miscellaneous utilities that don't fit into the other specific categories (retry, run in thread,
+2. cache.py: Utilities for caching data in memory, Redis or MongoDB.
+3. ai.py: Utilities for working with AI models, such as token count, tokenization, and text generation.
+4. translation.py: Utilities for working with translation APIs (Supported Google Translate and DeepL).
+5. services.py: Services-related utilities, such as creating google service.
+6. pandas.py: Utilities for working with pandas dataframes, (df cleaning, insertion into databases...).
+7. generic.py: Miscellaneous utilities that don't fit into the other specific categories (retry, run in thread,
    validate, etc.).
 
 ## Usage
@@ -48,6 +49,44 @@ from utils_b_infra.logging import SlackLogger
 logger = SlackLogger(project_name="your-project-name", slack_token="your-slack-token", slack_channel_id="channel-id")
 logger.info("This is an info message")
 logger.error(exc=Exception, header_message="Header message appears above the exception message in the Slack message")
+```
+
+Cache Utilities
+
+```python
+from time import sleep
+from utils_b_infra.cache import Cache, CacheConfig
+
+cache_config = CacheConfig(
+   cache_type="RedisCache",
+   redis_host="host",
+   redis_port=6379,
+   redis_password="password"
+)
+
+
+@cache.cached(60, namespace="test1", sliding_expiration=False)
+def hello(arg1: int, arg2: str) -> dict:
+   sleep(5)
+   data = {
+      "orders": [
+         "668abd233909666c44033913",
+         "668ab5167a0b54248b044b14",
+         "668aad6f1cd076a89e0f4e87",
+         "668ac1ff28065eadb408a9b5",
+         "668ac23eb6bb7b781f069567"
+      ],
+      "stats": {
+         "1": 10,
+         "2": 22
+      }
+   }
+   print(data)
+   return data
+
+
+if __name__ == "__main__":
+   hello(arg1=1, arg2="test")
 ```
 
 Services Utilities

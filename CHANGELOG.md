@@ -1,5 +1,11 @@
 # Changelog
 
+[0.4.0] - 2024-07-15
+
+### Added
+
+- Caching modules
+
 [0.3.0] - 2024-06-27
 
 ### Changed
