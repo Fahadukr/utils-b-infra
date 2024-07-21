@@ -1,9 +1,8 @@
-import asyncio
 import hashlib
 from typing import Any, Callable, Dict, Tuple
 
 
-async def key_builder(
+def key_builder(
         func: Callable[..., Any],
         app_space: str,
         namespace: str,
@@ -17,7 +16,3 @@ async def key_builder(
     key_hash = hashlib.md5(key_str.encode()).hexdigest()
     key = f"{app_space}:{namespace}:{key_hash}"
     return key
-
-
-def run_coro_in_background(coro):
-    asyncio.create_task(coro)

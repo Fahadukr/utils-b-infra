@@ -1,4 +1,4 @@
-import asyncio
+import threading
 from collections import OrderedDict
 from dataclasses import dataclass
 from typing import Optional, Tuple
@@ -37,7 +37,7 @@ class SimpleCache(BaseCache):
             default_timeout (int): The default time-to-live (TTL) for each cache item, in seconds.
         """
         self._store = OrderedDict()  # Preserve the order of insertion for LRU logic
-        self._lock = asyncio.Lock()
+        self._lock = threading.Lock()
         self._threshold = threshold
         self._default_timeout = default_timeout
 
@@ -46,7 +46,7 @@ class SimpleCache(BaseCache):
         """Returns the current time in seconds since the epoch."""
         return int(time.time())
 
-    async def _get(self, key: str) -> Optional[Value]:
+    def _get(self, key: str) -> Optional[Value]:
         """Retrieves an item from the cache if it exists and is not expired."""
         if key in self._store:
             self._store.move_to_end(key)  # Accessing the item moves it to the end (LRU)
@@ -57,21 +57,21 @@ class SimpleCache(BaseCache):
             return v
         return None
 
-    async def get_with_ttl(self, key: str) -> Tuple[int, Optional[bytes]]:
-        async with self._lock:
-            v = await self._get(key)
+    def get_with_ttl(self, key: str) -> Tuple[int, Optional[bytes]]:
+        with self._lock:
+            v = self._get(key)
             if v:
                 return v.ttl_ts - self._now, v.data
             return 0, None
 
-    async def get(self, key: str) -> Optional[bytes]:
-        async with self._lock:
-            v = await self._get(key)
+    def get(self, key: str) -> Optional[bytes]:
+        with self._lock:
+            v = self._get(key)
             if v:
                 return v.data
             return None
 
-    async def set(self, key: str, value: bytes, expire: Optional[int] = None) -> None:
+    def set(self, key: str, value: bytes, expire: Optional[int] = None) -> None:
         """
         Sets the value in the cache with an optional expiration time.
 
@@ -80,14 +80,14 @@ class SimpleCache(BaseCache):
             value (bytes): The data to store.
             expire (Optional[int]): The expiration time in seconds; uses default timeout if not specified.
         """
-        async with self._lock:
+        with self._lock:
             if len(self._store) >= self._threshold:
                 self._store.popitem(last=False)  # Remove oldest item - Least Recently Used (LRU)
             ttl = self._now + (expire if expire is not None else self._default_timeout)
             self._store[key] = Value(data=value, ttl_ts=ttl)
             self._store.move_to_end(key)
 
-    async def clear(self, namespace: Optional[str] = None, key: Optional[str] = None) -> int:
+    def clear(self, namespace: Optional[str] = None, key: Optional[str] = None) -> int:
         """
         Clears items from the cache based on the specified namespace or key.
 
@@ -99,7 +99,7 @@ class SimpleCache(BaseCache):
             int: The number of items cleared from the cache.
         """
         count = 0
-        async with self._lock:
+        with self._lock:
             if key:
                 if key in self._store:
                     del self._store[key]
@@ -115,7 +115,7 @@ class SimpleCache(BaseCache):
                     self._store.clear()
             return count
 
-    async def size(self) -> int:
+    def size(self) -> int:
         """Returns the current number of items in the cache."""
-        async with self._lock:
+        with self._lock:
             return len(self._store)

@@ -1,4 +1,3 @@
-import asyncio
 import logging
 import warnings
 from functools import wraps
@@ -73,19 +72,6 @@ class Cache:
             return True
         return endpoint_sliding_expiration or False
 
-    @staticmethod
-    async def ensure_async_func(func, *args, **kwargs):
-        """
-        Ensures that the given function runs asynchronously.
-        """
-        if asyncio.iscoroutinefunction(func):
-            return await func(*args, **kwargs)
-        else:
-            loop = asyncio.get_event_loop()
-            from functools import partial
-            func_part = partial(func, *args, **kwargs)
-            return await loop.run_in_executor(None, func_part)
-
     def cached(self,
                timeout: int = None,
                sliding_expiration: bool = None,
@@ -108,10 +94,10 @@ class Cache:
 
         def decorator(func: Callable):
             @wraps(func)
-            async def async_wrapper(*args, **kwargs):
+            def wrapper(*args, **kwargs):
                 # Key building and sliding expiration logic stays the same
                 is_sliding_expiration = self._get_is_sliding_expiration(sliding_expiration)
-                key = await key_builder(
+                key = key_builder(
                     func,
                     app_space=self._config.app_space,
                     namespace=namespace,
@@ -121,7 +107,8 @@ class Cache:
 
                 # Try to retrieve the cache
                 try:
-                    ttl, cached_result = await self.get_with_ttl(key)
+                    ttl, cached_result = self.get_with_ttl(key)
+                    print(f"ttl: {ttl}, cached_result: {cached_result}")
                 except Exception as e:
                     logger.warning(
                         f"Error retrieving cache key '{key}' from backend: {e}",
@@ -132,44 +119,28 @@ class Cache:
                 if cached_result is not None:  # Cache hit
                     result = self._coder.decode(cached_result)
                     if is_sliding_expiration:
-                        await self.set(key, cached_result, timeout)
+                        self.set(key, cached_result, timeout)
                 else:  # Cache miss
-                    result = await self.ensure_async_func(func, *args, **kwargs)
+                    result = func(*args, **kwargs)
                     result_encoded = self._coder.encode(result)
-                    await self.set(key, result_encoded, timeout)
+                    self.set(key, result_encoded, timeout)
+
+                print(f"result ready: {result}")
 
                 return result
 
-            @wraps(func)
-            def sync_wrapper(*args, **kwargs):
-                """Convert synchronous function to asynchronous by running in the event loop"""
-                try:
-                    loop = asyncio.get_event_loop()
-                    if loop.is_running():
-                        # If the loop is already running, create a new task for async_wrapper
-                        return asyncio.ensure_future(async_wrapper(*args, **kwargs))
-                    else:
-                        # If the loop is not running, run async_wrapper in the current loop
-                        return loop.run_until_complete(async_wrapper(*args, **kwargs))
-                except RuntimeError:
-                    # If no event loop is available, create a new one and run async_wrapper
-                    return asyncio.run(async_wrapper(*args, **kwargs))
-
-            if asyncio.iscoroutinefunction(func):
-                return async_wrapper
-            else:
-                return sync_wrapper
+            return wrapper
 
         return decorator
 
-    async def get_with_ttl(self, key: str) -> tuple[int, bytes | None]:
-        return await self._backend_cache.get_with_ttl(key)
+    def get_with_ttl(self, key: str) -> tuple[int, bytes | None]:
+        return self._backend_cache.get_with_ttl(key)
 
-    async def get(self, key: str) -> bytes | None:
-        return await self._backend_cache.get(key)
+    def get(self, key: str) -> bytes | None:
+        return self._backend_cache.get(key)
 
-    async def set(self, key: str, value: bytes, expire: int = None) -> None:
-        await self._backend_cache.set(key, value, expire)
+    def set(self, key: str, value: bytes, expire: int = None) -> None:
+        self._backend_cache.set(key, value, expire)
 
-    async def clear(self, namespace: str = None, key: str = None) -> int:
-        return await self._backend_cache.clear(namespace, key)
+    def clear(self, namespace: str = None, key: str = None) -> int:
+        return self._backend_cache.clear(namespace, key)

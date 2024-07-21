@@ -1,5 +1,11 @@
 # Changelog
 
+[0.5.0] - 2024-07-30
+
+### updated
+
+- Switch cache mechanism from async to sync
+
 [0.4.0] - 2024-07-20
 
 ### Added

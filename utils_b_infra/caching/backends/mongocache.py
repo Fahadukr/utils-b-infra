@@ -4,7 +4,6 @@ from typing import Optional, Tuple
 from urllib.parse import urlparse
 
 import pymongo
-from motor.motor_asyncio import AsyncIOMotorClient
 from utils_b_infra.caching.backends.base import BaseCache
 
 
@@ -43,8 +42,7 @@ class MongoCache(BaseCache):
             raise ValueError("Database name must be provided either in the URI or as a parameter")
 
         self._client = pymongo.MongoClient(url, directConnection=direct_connection)
-        self._client_async = AsyncIOMotorClient(url, directConnection=direct_connection)
-        self._database = self._client_async[self.database_name]
+        self._database = self._client[self.database_name]
         self._collection = self._database[collection]
         self._default_timeout = default_timeout
         self._app_space = app_space
@@ -57,11 +55,11 @@ class MongoCache(BaseCache):
         if not index_exists:
             collection.create_index("ttl", expireAfterSeconds=self._default_timeout)
 
-    async def close(self) -> None:
-        self._client_async.close()
+    def close(self) -> None:
+        self._client.close()
 
-    async def get_with_ttl(self, key: str) -> Tuple[int, Optional[bytes]]:
-        document = await self._collection.find_one({"key": key})
+    def get_with_ttl(self, key: str) -> Tuple[int, Optional[bytes]]:
+        document = self._collection.find_one({"key": key})
 
         if document:
             value = document.get("value")
@@ -77,25 +75,25 @@ class MongoCache(BaseCache):
 
         return 0, None
 
-    async def get(self, key: str) -> Optional[bytes]:
-        document = await self._collection.find_one({"key": key})
+    def get(self, key: str) -> Optional[bytes]:
+        document = self._collection.find_one({"key": key})
         if document:
             return document.get("value")
         return None
 
-    async def set(self, key: str, value: bytes, expire: Optional[int] = None) -> None:
+    def set(self, key: str, value: bytes, expire: Optional[int] = None) -> None:
         ttl = datetime.datetime.utcnow() + datetime.timedelta(
             seconds=expire if expire is not None else self._default_timeout)
 
-        await self._collection.update_one(
+        self._collection.update_one(
             {"key": key},
             {"$set": {"key": key, "value": value, "ttl": ttl}},
             upsert=True,
         )
 
-    async def clear(self, namespace: Optional[str] = None, key: Optional[str] = None) -> int:
+    def clear(self, namespace: Optional[str] = None, key: Optional[str] = None) -> int:
         if key:
-            result = await self._collection.delete_many({"key": key})
+            result = self._collection.delete_many({"key": key})
             return result.deleted_count
 
         pattern = ""
@@ -104,5 +102,5 @@ class MongoCache(BaseCache):
         if namespace:
             pattern += f"{namespace}:"
 
-        result = await self._collection.delete_many({"key": {"$regex": pattern}})
+        result = self._collection.delete_many({"key": {"$regex": pattern}})
         return result.deleted_count
