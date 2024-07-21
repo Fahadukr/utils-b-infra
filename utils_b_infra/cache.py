@@ -143,8 +143,17 @@ class Cache:
             @wraps(func)
             def sync_wrapper(*args, **kwargs):
                 """Convert synchronous function to asynchronous by running in the event loop"""
-                loop = asyncio.get_event_loop()
-                return loop.run_until_complete(async_wrapper(*args, **kwargs))
+                try:
+                    loop = asyncio.get_event_loop()
+                    if loop.is_running():
+                        # If the loop is already running, create a new task for async_wrapper
+                        return asyncio.ensure_future(async_wrapper(*args, **kwargs))
+                    else:
+                        # If the loop is not running, run async_wrapper in the current loop
+                        return loop.run_until_complete(async_wrapper(*args, **kwargs))
+                except RuntimeError:
+                    # If no event loop is available, create a new one and run async_wrapper
+                    return asyncio.run(async_wrapper(*args, **kwargs))
 
             if asyncio.iscoroutinefunction(func):
                 return async_wrapper
