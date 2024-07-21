@@ -13,6 +13,9 @@ class CacheConfig(BaseModel):
     coder: Coder = JsonCoder
     sliding_expiration: bool = False  # if True, the expiration time will be reset on every access
     ONE_HOUR: Final[int] = 3600
+    THREE_HOURS: Final[int] = ONE_HOUR * 3
+    FIVE_HOURS: Final[int] = ONE_HOUR * 5
+    EIGHT_HOURS: Final[int] = ONE_HOUR * 8
     ONE_DAY: Final[int] = ONE_HOUR * 24
     ONE_WEEK: Final[int] = ONE_DAY * 7
     ONE_MONTH: Final[int] = ONE_DAY * 30
