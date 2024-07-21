@@ -108,7 +108,6 @@ class Cache:
                 # Try to retrieve the cache
                 try:
                     ttl, cached_result = self.get_with_ttl(key)
-                    print(f"ttl: {ttl}, cached_result: {cached_result}")
                 except Exception as e:
                     logger.warning(
                         f"Error retrieving cache key '{key}' from backend: {e}",
@@ -124,8 +123,6 @@ class Cache:
                     result = func(*args, **kwargs)
                     result_encoded = self._coder.encode(result)
                     self.set(key, result_encoded, timeout)
-
-                print(f"result ready: {result}")
 
                 return result
 
