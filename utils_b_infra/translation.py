@@ -89,7 +89,7 @@ class TextTranslator:
         return result.text
 
     def get_translations(self,
-                         text_: str,
+                         text: str,
                          replace_lang_url: bool = False,
                          source_language: Literal["en", "ru", "ar", "de", "es", "fr", "uk"] = "en",
                          target_langs: list[Literal["ru", "ar", "de", "es", "fr", "uk"]] = None,
@@ -98,7 +98,7 @@ class TextTranslator:
                          deepl_tag_handling: str = None) -> dict[str, str]:
         """
         Translate text to all languages in LANGUAGES dict
-        :param text_: text to translate
+        :param text: text to translate
         :param replace_lang_url: replace base url with the base url from target language in the text.
         :param source_language: source language ['en', 'ru', 'ar', 'de', 'es', 'fr', 'uk']
         :param target_langs: list of languages to translate to, if None, translate to all languages in LANGUAGES dict
@@ -114,8 +114,8 @@ class TextTranslator:
         if target_langs and not all(lang in self.languages for lang in target_langs):
             raise ValueError("target_langs must be a list of 'ru', 'ar', 'de', 'es', 'fr', 'uk'")
 
-        translations = {'en': text_}
-        if not text_:
+        translations = {'en': text}
+        if not text:
             return translations
 
         for lang in self.languages:
@@ -123,14 +123,14 @@ class TextTranslator:
                 continue
             if engine == "google":
                 translated_text = self._translate_text_with_google(
-                    text_to_translate=text_,
+                    text_to_translate=text,
                     source_language=source_language,
                     target_lang=lang,
                     mime_type=google_mime_type
                 )
             elif engine == "deepl":
                 translated_text = self._translate_text_with_deepl(
-                    text_to_translate=text_,
+                    text_to_translate=text,
                     source_lang=source_language,
                     target_lang=lang,
                     tag_handling=deepl_tag_handling

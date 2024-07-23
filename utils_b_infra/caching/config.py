@@ -3,7 +3,7 @@ from typing import Literal, get_args, Final
 from pydantic import BaseModel, model_validator, field_validator
 from utils_b_infra.caching.coder import JsonCoder, Coder
 
-SUPPORTED_CACHE_TYPES = Literal["SimpleCache", "RedisCache", "MongoCache", "MemCache"]
+SUPPORTED_CACHE_TYPES = Literal["SimpleCache", "RedisCache", "MongoCache"]
 
 
 class CacheConfig(BaseModel):
@@ -30,7 +30,7 @@ class CacheConfig(BaseModel):
     redis_db: int = 0
 
     mongo_url: str = ""
-    mongo_database: str = "fastapi-cacher"
+    mongo_database: str = "cacher"
     mongo_collection: str = "cache"
     mongo_direct_connection: bool = False
 
