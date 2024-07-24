@@ -92,7 +92,7 @@ class TextTranslator:
                          text: str,
                          replace_lang_url: bool = False,
                          source_language: Literal["en", "ru", "ar", "de", "es", "fr", "uk"] = "en",
-                         target_langs: list[Literal["ru", "ar", "de", "es", "fr", "uk"]] = None,
+                         target_langs: list[Literal["en", "ru", "ar", "de", "es", "fr", "uk"]] = None,
                          engine: Literal["google", "deepl"] = "google",
                          google_mime_type: Literal["text/plain", "text/html"] = "text/plain",
                          deepl_tag_handling: str = None) -> dict[str, str]:
@@ -112,15 +112,19 @@ class TextTranslator:
         if source_language not in ['en', 'ru', 'ar', 'de', 'es', 'fr', 'uk']:
             raise ValueError("source_language must be one of 'en', 'ru', 'ar', 'de', 'es', 'fr', 'uk'")
         if target_langs and not all(lang in self.languages for lang in target_langs):
-            raise ValueError("target_langs must be a list of 'ru', 'ar', 'de', 'es', 'fr', 'uk'")
+            raise ValueError("target_langs must be a list of 'en', 'ru', 'ar', 'de', 'es', 'fr', 'uk'")
 
-        translations = {'en': text}
+        translations = {source_language: text}
         if not text:
             return translations
 
         for lang in self.languages:
+            if lang == source_language:
+                continue
+
             if target_langs and lang not in target_langs:
                 continue
+
             if engine == "google":
                 translated_text = self._translate_text_with_google(
                     text_to_translate=text,

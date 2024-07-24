@@ -152,7 +152,7 @@ translator = TextTranslator(deepl_api_key=deepl_api_key, languages=languages, go
 
 text_to_translate = "Hello, world!"
 translations = translator.get_translations(
-   text_=text_to_translate,
+   text=text_to_translate,
    source_language="en",
    target_langs=["ru", "ar", "de"],
    engine="google"
