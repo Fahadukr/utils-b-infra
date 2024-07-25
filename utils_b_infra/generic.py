@@ -266,10 +266,15 @@ def run_func_in_background(task, *args, **kwargs):
     threading.Thread(target=task, args=args, kwargs=kwargs).start()
 
 
-def date_formatter(date, is_event_time=False, is_mongo_id_object=False, is_mongo_time_object=False):
+def date_formatter(date,
+                   fmt: str = "%Y-%m-%d %H:%M:%S",
+                   is_event_time=False,
+                   is_mongo_id_object=False,
+                   is_mongo_time_object=False):
     """
     Extract date in format 'YYYY-MM-DD HH:MM:SS' from different date formats including MongoDB date objects.
     :param date: str, int, dict, datetime or MongoDB date object
+    :param fmt: valid datetime format like "%Y-%m-%d %H:%M:%S", "%Y-%m-%d", "%Y-%m-%d %H:%M"
     :param is_event_time: if it's an event time object in the format 'YYYY-MM-DD HH:MM:SS GMT'
     :param is_mongo_id_object: if it's a MongoDB ID object string
     :param is_mongo_time_object: if it's a MongoDB date object
@@ -281,20 +286,19 @@ def date_formatter(date, is_event_time=False, is_mongo_id_object=False, is_mongo
     # Handle different cases based on type of the 'date' and flags
     try:
         if isinstance(date, datetime):
-            return date.strftime('%Y-%m-%d %H:%M:%S')
+            return date.strftime(fmt)
 
         if is_event_time:
             # Assumes date is a string from which 'GMT' and fractional seconds can be removed
-            return datetime.strptime(date.replace('GMT', '').strip().split('.')[0], "%Y-%m-%d %H:%M:%S").strftime(
-                '%Y-%m-%d %H:%M:%S')
+            return datetime.strptime(date.replace('GMT', '').strip().split('.')[0], fmt).strftime(fmt)
 
         if is_mongo_time_object:
             # Parse MongoDB ISO date format
-            return datetime.strptime(date, '%Y-%m-%dT%H:%M:%S.%f+00:00').strftime('%Y-%m-%d %H:%M:%S')
+            return datetime.strptime(date, '%Y-%m-%dT%H:%M:%S.%f+00:00').strftime(fmt)
 
         if is_mongo_id_object:
             # Convert from MongoDB ObjectId
-            return ObjectId(date).generation_time.strftime('%Y-%m-%d %H:%M:%S')
+            return ObjectId(date).generation_time.strftime(fmt)
 
         if isinstance(date, dict):
             # Handle dict containing date details
@@ -306,11 +310,11 @@ def date_formatter(date, is_event_time=False, is_mongo_id_object=False, is_mongo
             if len(str(date)) > 10:
                 date = str(date)[:10]
             timestamp = int(float(date))
-            return datetime.utcfromtimestamp(timestamp).strftime('%Y-%m-%d %H:%M:%S')
+            return datetime.utcfromtimestamp(timestamp).strftime(fmt)
 
         if isinstance(date, str):
             # Try parsing ISO format or other standard date strings
-            return datetime.fromisoformat(date.rstrip('Z')).strftime('%Y-%m-%d %H:%M:%S')
+            return datetime.fromisoformat(date.rstrip('Z')).strftime(fmt)
 
     except (ValueError, TypeError, KeyError):
         print(f"Failed to parse date: {date}")
