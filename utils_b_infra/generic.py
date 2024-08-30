@@ -117,11 +117,11 @@ def get_closest_num_group(num_list: list[int], convert_nums_to_closest_100: bool
     """
     Split a list of nums into groups of close nums and return the group with the most nums
     Example:
-        [4, 5, 100, 1000, 1500, 1300, 1230, 5000] -> [1000, 1230, 1300, 1500]
+        [4, 5, 100, 1000, 1500, 1300, 1230, 5000] -> [1000, 1500, 1300, 1230]
 
     If convert_nums_to_closest_100 is True, the function will convert the nums to the closest 100
     Example:
-        [4, 5, 100, 1000, 1500, 1300, 1230, 5000] -> [1000, 1200, 1300, 1500]
+        [4, 5, 100, 1020, 1710, 2220, 2295, 5000] -> [1000, 1700, 2200, 2300]
 
     If the list contains less than 4 nums, the function will return the list as is
     If the max num is less than 10000 and less than 3 times the min num, the function will return the list as is
