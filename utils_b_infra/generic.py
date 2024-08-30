@@ -115,60 +115,82 @@ def valid_date(date):
 
 def get_closest_num_group(num_list: list[int], convert_nums_to_closest_100: bool = False) -> list:
     """
-    Split a list of nums into groups of close nums and return the group with the most nums
+    Split a list of nums into groups of close nums and return the group with the most nums.
     Example:
         [4, 5, 100, 1000, 1500, 1300, 1230, 5000] -> [1000, 1500, 1300, 1230]
 
-    If convert_nums_to_closest_100 is True, the function will convert the nums to the closest 100
+    If convert_nums_to_closest_100 is True, the function will convert the nums to the closest 100.
     Example:
         [4, 5, 100, 1020, 1710, 2220, 2295, 5000] -> [1000, 1700, 2200, 2300]
 
-    If the list contains less than 4 nums, the function will return the list as is
-    If the max num is less than 10000 and less than 3 times the min num, the function will return the list as is
-    If the max num is more than 10000 and less than 2 times the min num, the function will return the list as is
+    If the list contains less than 4 nums, the function will return the list as is.
+    If the max num is less than 10000 and less than 3 times the min num, the function will return the list as is.
+    If the max num is more than 10000 and less than 2 times the min num, the function will return the list as is.
 
-    The algorithm will calculate the median of the list and group the nums that are close to the median
+    The algorithm will calculate the median of the list and group the nums that are close to the median.
     """
-    # convert any item in the list to int if it's str
+
+    # Convert any string elements in the list to integers
     num_list = [int(float(num)) if isinstance(num, str) else num for num in num_list]
+
+    # Convert numbers to the closest 100 if the flag is set
     if convert_nums_to_closest_100:
         num_list = [round(num / 100) * 100 for num in num_list]
 
+    # Remove duplicates and sort the list
     num_list = list(set(num_list))
-
     num_list.sort()
+
+    # If the list contains less than 4 numbers, return the list as is
     if len(num_list) < 4:
         return num_list
 
     max_num = max(num_list)
     min_num = min(num_list)
+
+    # Return the list as is if the max number is less than 10,000 and less than 3 times the min number
+    # or if the max number is more than 10,000 and less than 2 times the min number
     if ((max_num < 10000) and (max_num <= 3 * min_num)) or ((max_num > 10000) and (max_num <= 2 * min_num)):
         return num_list
 
+    # Calculate the median of the list
     median = statistics.median(num_list)
+
+    # If the list is long enough, group numbers close to the median
     if len(num_list) > 5:
-        diff = [abs(num - median) for num in num_list]
-        threshold = 0.5
+        diff = [abs(num - median) for num in num_list]  # Calculate the absolute differences from the median
+        threshold = 0.5  # Default threshold as 50% of the median
+
+        # Increase the threshold if the range is very wide
         if max_num > (min_num * 4):
             threshold = 0.6
-        median_border = median * threshold
-        close_group = [num_list[i] for i in range(len(num_list)) if diff[i] <= median_border]
+
+        median_border = median * threshold  # Calculate the boundary for close numbers
+        close_group = [num_list[i] for i in range(len(num_list)) if diff[i] <= median_border]  # Group close numbers
+
+        # If no close group is found, return the original list
         if not close_group:
             return num_list
 
         return close_group
 
+    # Calculate the differences from the median
     differences = [abs(num_list[i] - median) for i in range(len(num_list))]
 
-    threshold = statistics.median(differences)
+    threshold = statistics.median(differences)  # Use the median of differences as the threshold
+
+    # Increase the threshold if the minimum number is large
     if min_num > 5000:
         threshold = 3 * threshold
 
+    # If the differences are small, return the list as is
     if threshold < 1000 and max(differences) < 1000:
         return num_list
 
     groups = []
     current_group = [num_list[0]]
+
+    # Group numbers that are within the threshold
     for i in range(1, len(num_list)):
         if num_list[i] - num_list[i - 1] <= threshold:
             current_group.append(num_list[i])
@@ -177,6 +199,7 @@ def get_closest_num_group(num_list: list[int], convert_nums_to_closest_100: bool
             current_group = [num_list[i]]
     groups.append(current_group)
 
+    # Return the largest group
     max_group = max(groups, key=len)
 
     return max_group

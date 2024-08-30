@@ -1,6 +1,6 @@
 Collection of utility functions and classes designed to enhance Python projects.
-The library is organized into several modules, including logging, client interactions,
-data manipulation with pandas, and general-purpose functions.
+The library is organized into several modules, including logging, cache, translation models,
+client interactions, data manipulation with pandas, and general-purpose functions.
 
 # Supported Python Versions
 

@@ -8,7 +8,7 @@ with open('CHANGELOG.md', 'r') as ch:
 
 setup(
     name="utils-B-infra",
-    version="0.5.5",
+    version="0.5.7",
     author="Fahad Mawlood",
     author_email="fahadukr@gmail.com",
     description="A collection of utility functions and classes for Python projects.",
