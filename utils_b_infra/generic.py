@@ -291,56 +291,61 @@ def run_func_in_background(task, *args, **kwargs):
 
 def date_formatter(date,
                    fmt: str = "%Y-%m-%d %H:%M:%S",
+                   input_fmt: str = None,
                    is_event_time=False,
                    is_mongo_id_object=False,
                    is_mongo_time_object=False):
     """
-    Extract date in format 'YYYY-MM-DD HH:MM:SS' from different date formats including MongoDB date objects.
-    :param date: str, int, dict, datetime or MongoDB date object
-    :param fmt: valid datetime format like "%Y-%m-%d %H:%M:%S", "%Y-%m-%d", "%Y-%m-%d %H:%M"
-    :param is_event_time: if it's an event time object in the format 'YYYY-MM-DD HH:MM:SS GMT'
-    :param is_mongo_id_object: if it's a MongoDB ID object string
-    :param is_mongo_time_object: if it's a MongoDB date object
-    :return: string in the format 'YYYY-MM-DD HH:MM:SS' or None if invalid
+    Extract date in the desired format from different date formats including MongoDB date objects.
+    :param date: str, int, dict, datetime, or MongoDB date object.
+    :param fmt: Desired output format like "%Y-%m-%d %H:%M:%S", "%Y-%m-%d", etc.
+    :param input_fmt: Input date format if the input date is in a specific string format (e.g., "YYYYMMDD").
+    :param is_event_time: If it's an event time object in the format 'YYYY-MM-DD HH:MM:SS GMT'.
+    :param is_mongo_id_object: If it's a MongoDB ObjectId.
+    :param is_mongo_time_object: If it's a MongoDB ISO date string.
+    :return: string in the desired format or None if invalid
     """
     if not date or date in {pd.NaT, np.nan, 'nan', 'NaT', 'None'}:
         return None
 
-    # Handle different cases based on type of the 'date' and flags
     try:
         if isinstance(date, datetime):
+            # If the date is a datetime object, format it to the desired output format.
             return date.strftime(fmt)
 
         if is_event_time:
-            # Assumes date is a string from which 'GMT' and fractional seconds can be removed
-            return datetime.strptime(date.replace('GMT', '').strip().split('.')[0], fmt).strftime(fmt)
+            # Handle event time by removing 'GMT' and fractional seconds
+            return datetime.strptime(date.replace('GMT', '').strip().split('.')[0], "%Y-%m-%d %H:%M:%S").strftime(fmt)
 
         if is_mongo_time_object:
             # Parse MongoDB ISO date format
             return datetime.strptime(date, '%Y-%m-%dT%H:%M:%S.%f+00:00').strftime(fmt)
 
         if is_mongo_id_object:
-            # Convert from MongoDB ObjectId
+            # Convert MongoDB ObjectId to datetime and format it
             return ObjectId(date).generation_time.strftime(fmt)
 
         if isinstance(date, dict):
-            # Handle dict containing date details
+            # Handle dictionaries that may contain timestamps (e.g., milliseconds or $date)
             date = date.get('milliseconds') or date.get('$date', {}).get('$numberLong')
             date = int(float(date))
 
         if is_numeric_value(date):
-            # Handle numeric timestamps
+            # Handle numeric timestamps (milliseconds or seconds)
             if len(str(date)) > 10:
-                date = str(date)[:10]
+                date = str(date)[:10]  # Truncate to 10 digits if needed
             timestamp = int(float(date))
             return datetime.utcfromtimestamp(timestamp).strftime(fmt)
 
         if isinstance(date, str):
-            # Try parsing ISO format or other standard date strings
+            if input_fmt:
+                # Convert the date string from input format to output format
+                return datetime.strptime(date, input_fmt).strftime(fmt)
+            # Try to handle ISO or other standard date strings
             return datetime.fromisoformat(date.rstrip('Z')).strftime(fmt)
 
-    except (ValueError, TypeError, KeyError):
-        print(f"Failed to parse date: {date}")
+    except (ValueError, TypeError, KeyError) as e:
+        print(f"Failed to parse date: {date}. Error: {e}")
         return None
 
     return None
