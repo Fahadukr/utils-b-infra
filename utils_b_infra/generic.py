@@ -330,7 +330,7 @@ def date_formatter(date,
             date = date.get('milliseconds') or date.get('$date', {}).get('$numberLong')
             date = int(float(date))
 
-        if is_numeric_value(date):
+        if is_numeric_value(date) and not input_fmt:
             # Handle numeric timestamps (milliseconds or seconds)
             if len(str(date)) > 10:
                 date = str(date)[:10]  # Truncate to 10 digits if needed
