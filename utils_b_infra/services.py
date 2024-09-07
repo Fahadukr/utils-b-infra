@@ -5,15 +5,29 @@ from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 
-DEFAULT_GOOGLE_SCOPES = ['https://www.googleapis.com/auth/drive',
-                         'https://www.googleapis.com/auth/spreadsheets',
-                         'https://www.googleapis.com/auth/drive.file']
+DEFAULT_GOOGLE_SCOPES = [
+    "https://www.googleapis.com/auth/drive",
+    "https://www.googleapis.com/auth/documents",
+    "https://www.googleapis.com/auth/spreadsheets",
+    "https://www.googleapis.com/auth/drive.file",
+    "https://www.googleapis.com/auth/admin.directory.user"
+]
+
+GOOGLE_DEFAULT_VERSIONS = {
+    'sheets': 'v4',
+    'drive': 'v3',
+    'docs': 'v1',
+}
 
 
 def get_google_service(google_token_path: str = 'common/google_token.json',
                        google_credentials_path: str = 'common/google_credentials.json',
                        service_name: str = 'sheets',
+                       version: str = None,
                        google_scopes: list[str] = None):
+    if service_name not in GOOGLE_DEFAULT_VERSIONS:
+        raise NotImplementedError(f"Service {service_name} is not supported")
+
     if not google_scopes:
         google_scopes = DEFAULT_GOOGLE_SCOPES
     creds = None
@@ -33,9 +47,7 @@ def get_google_service(google_token_path: str = 'common/google_token.json',
         with open(google_token_path, 'w') as token:
             token.write(creds.to_json())
 
-    if service_name == 'sheets':
-        service = build(service_name, 'v4', credentials=creds)
-    else:
-        raise ValueError(f"Service {service_name} is not supported")
+    if not version:
+        version = GOOGLE_DEFAULT_VERSIONS[service_name]
 
-    return service
+    return build(service_name, version, credentials=creds)
