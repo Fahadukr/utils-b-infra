@@ -29,6 +29,7 @@ def calculate_openai_price(text_: str, output_tokens: int, model: str) -> float:
 
     # Price (USD) per model per 1M tokens (input, output)
     prices = {
+        'gpt-4o-2024-08-06': (2.5, 10),
         'gpt-4o': (5, 15),
         'gpt-4o-2024-05-13': (5, 15),
         'gpt-4-0125-preview': (10, 30),
@@ -78,9 +79,10 @@ class TextGenerator:
                              answer_tokens=3000,
                              temperature=0.7,
                              gpt_model='gpt-4o',
-                             json_response=False,
+                             parse_json_response=False,
                              **kwargs) -> str | dict:
         """
+        parse_json_response: if True, the function will try to extract JSON from the response
         **kwargs: additional parameters for OpenAI API like
         response_format={"type": "json_object"}
         """
@@ -89,6 +91,9 @@ class TextGenerator:
 
         if not isinstance(user_text, str):
             user_text = json.dumps(user_text)
+
+        if gpt_model in ('gpt-4o-2024-08-06', 'gpt-4o-mini', 'gpt-4-1106-preview') and parse_json_response:
+            kwargs.setdefault('response_format', {"type": "json_object"})
 
         ai_text = self.openai_client.chat.completions.create(model=gpt_model,
                                                              messages=[
@@ -103,7 +108,7 @@ class TextGenerator:
                                                              **kwargs)
 
         ai_text = ai_text.choices[0].message.content.strip()
-        if ai_text and json_response:
+        if ai_text and parse_json_response:
             ai_text = extract_json_from_text(ai_text)
             try:
                 ai_text = json.loads(ai_text, strict=False)
