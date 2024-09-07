@@ -20,11 +20,13 @@ GOOGLE_DEFAULT_VERSIONS = {
 }
 
 
-def get_google_service(google_token_path: str = 'common/google_token.json',
-                       google_credentials_path: str = 'common/google_credentials.json',
-                       service_name: str = 'sheets',
-                       version: str = None,
-                       google_scopes: list[str] = None):
+def get_google_service(
+        service_name: str = 'sheets',
+        version: str = None,
+        google_scopes: list[str] = None,
+        google_token_path: str = 'common/google_token.json',
+        google_credentials_path: str = 'common/google_credentials.json',
+) -> build:
     if service_name not in GOOGLE_DEFAULT_VERSIONS:
         raise NotImplementedError(f"Service {service_name} is not supported")
 
