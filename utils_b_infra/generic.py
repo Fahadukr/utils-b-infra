@@ -35,11 +35,13 @@ class Timer:
         self.minutes_taken = self.seconds_taken / 60
 
 
-def is_running_locally():
-    """Checks whether the code is running locally or in a Docker container.
-    IS_RUNNING_IN_DOCKER should be set to 'true' in the Dockerfile: ENV IS_RUNNING_IN_DOCKER true
+def is_running_locally(env_key: str = 'IS_RUNNING_IN_DOCKER'):
     """
-    return not os.getenv('IS_RUNNING_IN_DOCKER', False) == 'true'
+    Checks whether the code is running locally
+    For docker containers, set the environment variable IS_RUNNING_IN_DOCKER to 'true' in Dockerfile.
+    ENV IS_RUNNING_IN_DOCKER true
+    """
+    return not os.getenv(env_key, False) == 'true'
 
 
 def retry_with_timeout(retries=3, timeout=60, initial_delay=10, backoff=2):
