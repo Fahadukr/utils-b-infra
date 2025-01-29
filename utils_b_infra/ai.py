@@ -74,37 +74,41 @@ class TextGenerator:
 
     @retry_with_timeout(retries=3, timeout=200, initial_delay=10, backoff=2)
     def generate_ai_response(self,
-                             prompt,
-                             user_text,
-                             answer_tokens=3000,
-                             temperature=0.7,
-                             gpt_model='gpt-4o',
-                             parse_json_response=False,
+                             prompt: str,
+                             user_text: str = None,
+                             gpt_model: str = 'gpt-4o',
+                             answer_tokens: int = 3000,
+                             temperature: int = 0.7,
+                             frequency_penalty: int = 0,
+                             presence_penalty: int = 0,
+                             top_p: int = 1,
+                             parse_json_response: bool = False,
                              **kwargs) -> str | dict:
         """
         parse_json_response: if True, the function will try to extract JSON from the response
         **kwargs: additional parameters for OpenAI API like
         response_format={"type": "json_object"}
         """
-        if not user_text or (isinstance(user_text, str) and len(user_text) < 20):
-            return ''
-
-        if not isinstance(user_text, str):
+        if user_text and not isinstance(user_text, str):
             user_text = json.dumps(user_text)
 
-        if gpt_model in ('gpt-4o-2024-08-06', 'gpt-4o-mini', 'gpt-4-1106-preview') and parse_json_response:
+        messages = [
+            {"role": "system", "content": prompt}
+        ]
+        if user_text:
+            messages.append({"role": "user", "content": user_text})
+
+
+        if gpt_model in ('gpt-4o', 'gpt-4o-2024-08-06', 'gpt-4o-mini', 'gpt-4-1106-preview') and parse_json_response:
             kwargs.setdefault('response_format', {"type": "json_object"})
 
         ai_text = self.openai_client.chat.completions.create(model=gpt_model,
-                                                             messages=[
-                                                                 {"role": "system", "content": prompt},
-                                                                 {"role": "user", "content": user_text}
-                                                             ],
-                                                             temperature=temperature,
+                                                             messages=messages,
                                                              max_tokens=answer_tokens,
-                                                             top_p=1,
-                                                             frequency_penalty=0,
-                                                             presence_penalty=0,
+                                                             temperature=temperature,
+                                                             frequency_penalty=frequency_penalty,
+                                                             presence_penalty=presence_penalty,
+                                                             top_p=top_p,
                                                              **kwargs)
 
         ai_text = ai_text.choices[0].message.content.strip()
