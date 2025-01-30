@@ -113,7 +113,6 @@ class TextGenerator:
 
         ai_text = ai_text.choices[0].message.content.strip()
         if ai_text and parse_json_response:
-            ai_text = extract_json_from_text(ai_text)
             try:
                 ai_text = json.loads(ai_text, strict=False)
             except:

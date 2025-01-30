@@ -91,8 +91,8 @@ class TextTranslator:
     def get_translations(self,
                          text: str,
                          replace_lang_url: bool = False,
-                         source_language: Literal["en", "ru", "ar", "de", "es", "fr", "uk"] = "en",
-                         target_langs: list[Literal["en", "ru", "ar", "de", "es", "fr", "uk"]] = None,
+                         source_language: Literal["en", "ru", "ar", "de", "es", "fr", "uk", "pl"] = "en",
+                         target_langs: list[Literal["en", "ru", "ar", "de", "es", "fr", "uk", "pl"]] = None,
                          engine: Literal["google", "deepl"] = "google",
                          google_mime_type: Literal["text/plain", "text/html"] = "text/plain",
                          deepl_tag_handling: str = None) -> dict[str, str]:
@@ -100,7 +100,7 @@ class TextTranslator:
         Translate text to all languages in LANGUAGES dict
         :param text: text to translate
         :param replace_lang_url: replace base url with the base url from target language in the text.
-        :param source_language: source language ['en', 'ru', 'ar', 'de', 'es', 'fr', 'uk']
+        :param source_language: source language ['en', 'ru', 'ar', 'de', 'es', 'fr', 'uk', 'pl']
         :param target_langs: list of languages to translate to, if None, translate to all languages in LANGUAGES dict
         :param engine: the translation engine to use, either "google" or "deepl"
         :param google_mime_type: for Google only, mime type of the text, either "text/plain" or "text/html"
@@ -109,10 +109,10 @@ class TextTranslator:
         """
         if engine and engine not in ["google", "deepl"]:
             raise ValueError("engine must be either 'google' or 'deepl'")
-        if source_language not in ['en', 'ru', 'ar', 'de', 'es', 'fr', 'uk']:
-            raise ValueError("source_language must be one of 'en', 'ru', 'ar', 'de', 'es', 'fr', 'uk'")
+        if source_language not in ['en', 'ru', 'ar', 'de', 'es', 'fr', 'uk', 'pl']:
+            raise ValueError("source_language must be one of 'en', 'ru', 'ar', 'de', 'es', 'fr', 'uk', 'pl'")
         if target_langs and not all(lang in self.languages for lang in target_langs):
-            raise ValueError("target_langs must be a list of 'en', 'ru', 'ar', 'de', 'es', 'fr', 'uk'")
+            raise ValueError("target_langs must be a list of 'en', 'ru', 'ar', 'de', 'es', 'fr', 'uk', 'pl'")
 
         translations = {source_language: text}
         if not text:

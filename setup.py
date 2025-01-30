@@ -7,8 +7,8 @@ with open('CHANGELOG.md', 'r') as ch:
     long_description += "\n\n" + ch.read()
 
 setup(
-    name="utils-B-infra",
-    version="0.5.15",
+    name="utils_B_infra",
+    version="0.5.2",
     author="Fahad Mawlood",
     author_email="fahadukr@gmail.com",
     description="A collection of utility functions and classes for Python projects.",
