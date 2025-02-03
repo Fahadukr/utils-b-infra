@@ -98,18 +98,31 @@ class TextGenerator:
         if user_text:
             messages.append({"role": "user", "content": user_text})
 
-
-        if gpt_model in ('gpt-4o', 'gpt-4o-2024-08-06', 'gpt-4o-mini', 'gpt-4-1106-preview') and parse_json_response:
+        if parse_json_response:
             kwargs.setdefault('response_format', {"type": "json_object"})
 
-        ai_text = self.openai_client.chat.completions.create(model=gpt_model,
-                                                             messages=messages,
-                                                             max_tokens=answer_tokens,
-                                                             temperature=temperature,
-                                                             frequency_penalty=frequency_penalty,
-                                                             presence_penalty=presence_penalty,
-                                                             top_p=top_p,
-                                                             **kwargs)
+        if gpt_model in ('o1', 'o1-mini', 'o3-mini'):
+            # reasoning models
+            if not kwargs.get('reasoning_effort'):
+                raise ValueError('reasoning_effort is required for reasoning models')
+
+            ai_text = self.openai_client.chat.completions.create(
+                model=gpt_model,
+                messages=messages,
+                **kwargs
+            )
+
+        else:
+            ai_text = self.openai_client.chat.completions.create(
+                model=gpt_model,
+                messages=messages,
+                max_tokens=answer_tokens,
+                temperature=temperature,
+                frequency_penalty=frequency_penalty,
+                presence_penalty=presence_penalty,
+                top_p=top_p,
+                **kwargs
+            )
 
         ai_text = ai_text.choices[0].message.content.strip()
         if ai_text and parse_json_response:
