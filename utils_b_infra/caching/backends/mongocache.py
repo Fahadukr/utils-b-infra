@@ -87,7 +87,12 @@ class MongoCache(BaseCache):
 
         self._collection.update_one(
             {"key": key},
-            {"$set": {"key": key, "value": value, "ttl": ttl}},
+            {"$set": {
+                "key": key,
+                "value": value,
+                "ttl": ttl,
+                "created_at": datetime.datetime.now(datetime.UTC)
+            }},
             upsert=True,
         )
 
