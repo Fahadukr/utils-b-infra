@@ -7,16 +7,22 @@ from googleapiclient.discovery import build
 
 DEFAULT_GOOGLE_SCOPES = [
     "https://www.googleapis.com/auth/drive",
+    "https://www.googleapis.com/auth/drive.file",
     "https://www.googleapis.com/auth/documents",
     "https://www.googleapis.com/auth/spreadsheets",
-    "https://www.googleapis.com/auth/drive.file",
-    "https://www.googleapis.com/auth/admin.directory.user"
+    "https://www.googleapis.com/auth/admin.directory.user",
+    'https://mail.google.com/',
+    'https://www.googleapis.com/auth/gmail.send',
+    'https://www.googleapis.com/auth/gmail.readonly',
+    'https://www.googleapis.com/auth/gmail.compose',
+    'https://www.googleapis.com/auth/gmail.modify',
 ]
 
 GOOGLE_DEFAULT_VERSIONS = {
     'sheets': 'v4',
     'drive': 'v3',
     'docs': 'v1',
+    'gmail': 'v1',
 }
 
 

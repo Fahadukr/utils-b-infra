@@ -91,7 +91,7 @@ class MongoCache(BaseCache):
                 "key": key,
                 "value": value,
                 "ttl": ttl,
-                "created_at": datetime.datetime.now(datetime.UTC)
+                "created_at": datetime.datetime.utcnow()
             }},
             upsert=True,
         )
