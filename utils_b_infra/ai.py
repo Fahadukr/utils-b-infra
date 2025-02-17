@@ -62,14 +62,14 @@ class TextGenerator:
         self.openai_client = openai_client
 
     @retry_with_timeout(retries=3, timeout=60, initial_delay=10, backoff=2)
-    def generate_text_embeddings(self, content, model='text-embedding-ada-002'):
+    def generate_text_embeddings(self, content, model="text-embedding-3-small"):
         """
         This function takes a string content as input and computes its GPT-3 embeddings using the specified engine.
         :return: A list containing the GPT-3 embeddings for the input content.
         """
         content = content.encode(encoding='ASCII', errors='ignore').decode()  # fix any UNICODE errors
         content = content.replace("\n", " ")
-        emb = self.openai_client.embeddings.create(input=[content], model=model)
+        emb = self.openai_client.embeddings.create(input=content, model=model)
         return emb.data[0].embedding
 
     @retry_with_timeout(retries=3, timeout=200, initial_delay=10, backoff=2)
