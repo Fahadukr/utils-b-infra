@@ -1,5 +1,10 @@
 # Changelog
 
+[0.6.0] - 2025-02-18
+- Switch the default cache database in MongoDB from the connection string to the database parameter. 
+- Switch the default embedding model to 'text-embedding-3-small'. 
+- Added support for reasoning modules with the reasoning_effort parameter in the ai.TextGenerator class.
+
 [0.5.0] - 2024-07-30
 
 ### updated

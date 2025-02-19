@@ -34,9 +34,9 @@ class MongoCache(BaseCache):
         if url_database_name and database and url_database_name != database:
             warnings.warn(f"MongoCache - Database name provided in the URL '{url_database_name}' does not match "
                           f"the one provided as a parameter '{database}'."
-                          " Using the one provided in the URL!")
+                          " Using the one provided in the database parameter.")
 
-        self.database_name = url_database_name or database
+        self.database_name = database or url_database_name
 
         if not self.database_name:
             raise ValueError("Database name must be provided either in the URI or as a parameter")
