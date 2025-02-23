@@ -53,9 +53,12 @@ class MongoCache(BaseCache):
         indexes = collection.index_information()
         index_exists = any(index['key'] == [('ttl', pymongo.ASCENDING)] for index in indexes.values())
         if not index_exists:
-            collection.create_index("ttl", expireAfterSeconds=self._default_timeout)
+            collection.create_index("ttl", expireAfterSeconds=0)
 
     def close(self) -> None:
+        """
+        Closes the MongoDB connection.
+        """
         self._client.close()
 
     def get_with_ttl(self, key: str) -> Tuple[int, Optional[bytes]]:
@@ -82,8 +85,14 @@ class MongoCache(BaseCache):
         return None
 
     def set(self, key: str, value: bytes, expire: Optional[int] = None) -> None:
+        """
+        Store a key-value pair in the cache with an expiration time.
+        :param key: Cache key.
+        :param value: Cached data.
+        :param expire: Time-to-live (TTL) in seconds. Defaults to `self._default_timeout` if not provided.
+        """
         ttl = datetime.datetime.utcnow() + datetime.timedelta(
-            seconds=expire if expire is not None else self._default_timeout)
+            seconds=expire if expire is not None else self._default_timeout or 86400)  # 1 day
 
         self._collection.update_one(
             {"key": key},
