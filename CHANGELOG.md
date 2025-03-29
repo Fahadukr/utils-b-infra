@@ -1,5 +1,10 @@
 # Changelog
 
+[0.7.0] - 2025-03-29
+- Changed slack_channel_id to default_channel_id in `SlackApi` and `SlackLogger` classes.
+- Updated `SlackApi` and `SlackLogger` to enable specifying custom Slack channel IDs for messages.
+- Improved encapsulation in the logging classes. 
+
 [0.6.0] - 2025-02-18
 - Switch the default cache database in MongoDB from the connection string to the database parameter. 
 - Switch the default embedding model to 'text-embedding-3-small'. 

@@ -46,7 +46,7 @@ Logging Utilities
 ```python
 from utils_b_infra.logging import SlackLogger
 
-logger = SlackLogger(project_name="your-project-name", slack_token="your-slack-token", slack_channel_id="channel-id")
+logger = SlackLogger(project_name="your-project-name", slack_token="your-slack-token", default_channel_id="channel-id")
 logger.info("This is an info message")
 logger.error(exc=Exception, header_message="Header message appears above the exception message in the Slack message")
 ```
@@ -94,9 +94,11 @@ Services Utilities
 ```python
 from utils_b_infra.services import get_google_service
 
-google_sheet_service = get_google_service(google_token_path='common/google_token.json',
-                                          google_credentials_path='common/google_credentials.json',
-                                          service_name='sheets')
+google_sheet_service = get_google_service(
+   google_token_path='common/google_token.json',
+   google_credentials_path='common/google_credentials.json',
+   service_name='sheets'
+)
 ```
 
 Pandas Utilities
