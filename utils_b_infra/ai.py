@@ -1,6 +1,7 @@
 import ast
 import json
 import re
+from typing import Any
 
 import openai
 import tiktoken
@@ -75,7 +76,7 @@ class TextGenerator:
     @retry_with_timeout(retries=3, timeout=200, initial_delay=10, backoff=2)
     def generate_ai_response(self,
                              prompt: str,
-                             user_text: str = None,
+                             user_text: Any = None,
                              gpt_model: str = 'gpt-4o',
                              answer_tokens: int = 3000,
                              temperature: int = 0.7,
