@@ -12,6 +12,7 @@ class SlackLogger:
     def __init__(self,
                  project_name: str,
                  slack_token: str,
+                 subprocess: str = None,
                  default_channel_id: str = None,
                  info_channel_id: str = None,
                  error_channel_id: str = None):
@@ -26,22 +27,26 @@ class SlackLogger:
         self._error_channel_id = error_channel_id
 
         self._last_messages = []
-        self._subprocess = None
+        self._subprocess = subprocess
 
-    def clone(self, *, subprocess: str = None) -> "SlackLogger":
+    def clone(self,
+              *,
+              subprocess: str = None,
+              default_channel_id: str = None,
+              info_channel_id: str = None,
+              error_channel_id: str = None
+              ) -> "SlackLogger":
         """
-        Clone the current SlackLogger instance, allowing for a different subprocess name.
+        Clone the current SlackLogger instance, allowing for different configurations.
         """
-        new_logger = SlackLogger(
+        return SlackLogger(
             project_name=self._project_name,
             slack_token=self._slack_client.token,
-            default_channel_id=self._default_channel_id,
-            info_channel_id=self._info_channel_id,
-            error_channel_id=self._error_channel_id
+            subprocess=subprocess or self._subprocess,
+            default_channel_id=default_channel_id or self._default_channel_id,
+            info_channel_id=info_channel_id or self._info_channel_id,
+            error_channel_id=error_channel_id or self._error_channel_id
         )
-        if subprocess:
-            new_logger._subprocess = subprocess
-        return new_logger
 
     def _resolve_channel(self, provided_channel_id: str, is_error: bool) -> str:
         """
