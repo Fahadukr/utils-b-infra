@@ -2,10 +2,26 @@ import hashlib
 import os
 import traceback
 from datetime import datetime, timedelta
+from enum import Enum
 from typing import Any
 
 import sys
 from slack_sdk import WebClient as SlackWebClient
+
+
+class SlackLogLevel(str, Enum):
+    INFO = "good"
+    WARNING = "warning"
+    ERROR = "danger"
+    DEBUG = "#CCCCCC"  # light gray
+
+    @property
+    def prefix(self) -> str:
+        if self == SlackLogLevel.DEBUG:
+            return "*DEBUG*: "
+        elif self == SlackLogLevel.WARNING:
+            return "*WARNING*: "
+        return ""
 
 
 class SlackLogger:
@@ -64,23 +80,28 @@ class SlackLogger:
 
     def _post_to_slack(self,
                        message: str,
+                       level: SlackLogLevel,
                        error_text: str = None,
                        channel_id: str = None,
                        subprocess: str = None,
                        color: str = None) -> None:
         """ Post ordinary messages as warning or error messages as danger
         :param message: message to post
+        :param level: message level (error, warning, info)
         :param error_text: error text to post
         :param channel_id: Slack channel ID to send the message to, if different from the default
         :param color: Optional HEX or Slack-supported color ('good', 'warning', 'danger').
         """
+
+        message = level.prefix + message
+
         attachments = {
             "text": message,
             "fallback": message,
-            "color": "danger" if error_text else (color or "warning")
+            "color": color or level.value
         }
 
-        if error_text:
+        if level == SlackLogLevel.ERROR and error_text is not None:
             pre_text = f"[{subprocess or self._subprocess or self._project_name}]: {message}"
             attachments.update({
                 "text": error_text,
@@ -90,7 +111,7 @@ class SlackLogger:
             })
 
         self._slack_client.chat_postMessage(
-            channel=self._resolve_channel(channel_id, is_error=bool(error_text)),
+            channel=self._resolve_channel(channel_id, is_error=level == SlackLogLevel.ERROR),
             attachments=[attachments],
             username=f"{self._project_name.lower()}-logger",
             icon_emoji=":robot_face:"
@@ -118,6 +139,7 @@ class SlackLogger:
         truncated = error_text[-8000:] if len(error_text) > 8000 else error_text
         self._post_to_slack(
             message=message,
+            level=SlackLogLevel.ERROR,
             error_text=truncated,
             channel_id=channel_id,
             subprocess=subprocess,
@@ -166,7 +188,8 @@ class SlackLogger:
              subprocess: str = None,
              color: str = None) -> None:
         """
-        :param message: message appears as a warning message in slack without error
+        Post an info message to Slack with green color.
+        :param message: message appears as an info message in slack without error
         :param channel_id: Slack channel ID to send the message to, if different from the default
         :param color: Optional HEX or Slack-supported color ('good', 'warning', 'danger').
         :param subprocess: Optional subprocess name to include in the message.
@@ -174,6 +197,49 @@ class SlackLogger:
         """
         self._post_to_slack(
             message=message,
+            level=SlackLogLevel.INFO,
+            channel_id=channel_id,
+            subprocess=subprocess,
+            color=color
+        )
+
+    def warning(self,
+                message: str,
+                channel_id: str = None,
+                subprocess: str = None,
+                color: str = None) -> None:
+        """
+        Post a warning message to Slack with yellow color.
+        :param message: message appears as a warning message in slack without error
+        :param channel_id: Slack channel ID to send the message to, if different from the default
+        :param subprocess: Optional subprocess name to include in the message.
+        :param color: Optional HEX or Slack-supported color ('good', 'warning', 'danger').
+        :return: None
+        """
+        self._post_to_slack(
+            message=message,
+            level=SlackLogLevel.WARNING,
+            channel_id=channel_id,
+            subprocess=subprocess,
+            color=color
+        )
+
+    def debug(self,
+              message: str,
+              channel_id: str = None,
+              subprocess: str = None,
+              color: str = None) -> None:
+        """
+        Post a debug message to Slack with gray color.
+        :param message: message appears as a debug message in slack without error
+        :param channel_id: Slack channel ID to send the message to, if different from the default
+        :param subprocess: Optional subprocess name to include in the message.
+        :param color: Optional HEX or Slack-supported color ('good', 'warning', 'danger').
+        :return: None
+        """
+        self._post_to_slack(
+            message=message,
+            level=SlackLogLevel.DEBUG,
             channel_id=channel_id,
             subprocess=subprocess,
             color=color
