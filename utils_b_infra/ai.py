@@ -5,12 +5,15 @@ from typing import Any
 
 import openai
 import tiktoken
+from openai._types import NotGiven
 from utils_b_infra.generic import retry_with_timeout
 
 AI_NO_ANSWER_PHRASES = ["Sorry, I", "AI language model",
                         "cannot provide", "without any input",
                         "There is no raw text", "There is no text",
                         "Please provide "]
+
+NOT_GIVEN = NotGiven()
 
 
 def count_tokens_per_text(text: str) -> int:
@@ -78,7 +81,7 @@ class TextGenerator:
                              prompt: str,
                              user_text: Any = None,
                              gpt_model: str = 'gpt-4o',
-                             answer_tokens: int = 3000,
+                             answer_tokens: int = None,
                              temperature: int = 0.7,
                              frequency_penalty: int = 0,
                              presence_penalty: int = 0,
@@ -117,7 +120,7 @@ class TextGenerator:
             ai_text = self.openai_client.chat.completions.create(
                 model=gpt_model,
                 messages=messages,
-                max_tokens=answer_tokens,
+                max_tokens=answer_tokens if answer_tokens else NOT_GIVEN,
                 temperature=temperature,
                 frequency_penalty=frequency_penalty,
                 presence_penalty=presence_penalty,
