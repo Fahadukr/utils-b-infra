@@ -95,18 +95,21 @@ class SlackLogger:
 
         message = level.prefix + message
 
+        subprocess_name = subprocess or self._subprocess
+
+        message = f"[{subprocess_name}]: {message}" if subprocess_name else message
+
         attachments = {
             "text": message,
             "fallback": message,
             "color": color or level.value
         }
 
-        if level == SlackLogLevel.ERROR and error_text is not None:
-            pre_text = f"[{subprocess or self._subprocess or self._project_name}]: {message}"
+        if level == SlackLogLevel.ERROR and error_text:
             attachments.update({
                 "text": error_text,
-                "pretext": pre_text,
-                "fallback": pre_text,
+                "pretext": message,
+                "fallback": message,
                 "title": "Error traceback"
             })
 
