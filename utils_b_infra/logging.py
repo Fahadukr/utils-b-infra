@@ -24,14 +24,46 @@ class SlackLogLevel(str, Enum):
         return ""
 
 
+class BotIconEmoji(str, Enum):
+    """
+    Enum for Slack icon emojis.
+    The SLACK_LOGGER_EMOJI is a reference to an environment variable
+        that can be set to customize the emoji used by the Slack logger.
+        If not set, it will default to `:robot_face:`
+    """
+    TECHNOLOGIST = ":technologist:"
+    ROBOT_FACE = ":robot_face:"
+    SLACK_LOGGER_EMOJI = "SLACK_LOGGER_EMOJI"  # symbolic reference, value will be os.getenv("SLACK_LOGGER_EMOJI")
+
+
 class SlackLogger:
-    def __init__(self,
-                 project_name: str,
-                 slack_token: str,
-                 subprocess: str = None,
-                 default_channel_id: str = None,
-                 info_channel_id: str = None,
-                 error_channel_id: str = None):
+    def __init__(
+            self,
+            project_name: str,
+            slack_token: str,
+            subprocess: str = None,
+            default_channel_id: str = None,
+            info_channel_id: str = None,
+            error_channel_id: str = None,
+            icon_emoji: str | BotIconEmoji = None,
+    ) -> None:
+        """
+        Initialize the SlackLogger instance.
+
+        :param project_name: name of the project for logging purposes (used in the username of the slack bot)
+        :param slack_token: Slack API token to authenticate the Slack client.
+        :param subprocess: (Optional) Name of the subprocess for logging context. This will be prefixed to messages.
+        :param default_channel_id: default Slack channel ID to send messages to if no specific channel is provided.
+        :param info_channel_id: default Slack channel ID for info messages.
+        :param error_channel_id: default Slack channel ID for error messages.
+        :param icon_emoji:
+            - str (custom emoji), e.g. ":robot_face:"
+            - BotIconEmoji Enum member, e.g. BotIconEmoji.TECHNOLOGIST
+            If neither is provided, defaults to:
+              - BotIconEmoji.SLACK_LOGGER_EMOJI (if set via environment),
+              - otherwise BotIconEmoji.TECHNOLOGIST.
+        :raises ValueError: If no channel IDs are provided.
+        """
         if not any([default_channel_id, info_channel_id, error_channel_id]):
             raise ValueError("At least one channel ID must be provided.")
 
@@ -42,15 +74,43 @@ class SlackLogger:
         self._info_channel_id = info_channel_id
         self._error_channel_id = error_channel_id
 
+        self._provided_icon_emoji = icon_emoji
+        self._icon_emoji = self._get_bot_emoji()
+
         self._last_messages = []
         self._subprocess = subprocess
+
+    def _get_bot_emoji(self) -> str:
+        """
+        Determines the emoji to use for the Slack bot.
+        if icon_emoji is set to BotIconEmoji.SLACK_LOGGER_EMOJI,
+            it will check for the environment variable `SLACK_LOGGER_EMOJI`
+            if not set, it will fallback to the default `:robot_face:`.
+        :return: str representation of the emoji to use for the Slack bot.
+        """
+        env_emoji = os.getenv("SLACK_LOGGER_EMOJI")
+
+        if self._provided_icon_emoji == BotIconEmoji.SLACK_LOGGER_EMOJI:
+            if env_emoji:
+                return env_emoji
+            print("Warning: SLACK_LOGGER_EMOJI environment variable is not set, "
+                  "falling back to default icon :robot_face:")
+            return BotIconEmoji.ROBOT_FACE.value
+
+        if self._provided_icon_emoji:
+            if isinstance(self._provided_icon_emoji, BotIconEmoji):
+                self._provided_icon_emoji = self._provided_icon_emoji.value
+            return self._provided_icon_emoji
+
+        return env_emoji or BotIconEmoji.TECHNOLOGIST.value
 
     def clone(self,
               *,
               subprocess: str = None,
               default_channel_id: str = None,
               info_channel_id: str = None,
-              error_channel_id: str = None
+              error_channel_id: str = None,
+              icon_emoji: str | BotIconEmoji = None
               ) -> "SlackLogger":
         """
         Clone the current SlackLogger instance, allowing for different configurations.
@@ -61,7 +121,8 @@ class SlackLogger:
             subprocess=subprocess or self._subprocess,
             default_channel_id=default_channel_id or self._default_channel_id,
             info_channel_id=info_channel_id or self._info_channel_id,
-            error_channel_id=error_channel_id or self._error_channel_id
+            error_channel_id=error_channel_id or self._error_channel_id,
+            icon_emoji=icon_emoji or self._icon_emoji
         )
 
     def _resolve_channel(self, provided_channel_id: str, is_error: bool) -> str:
@@ -117,7 +178,7 @@ class SlackLogger:
             channel=self._resolve_channel(channel_id, is_error=level == SlackLogLevel.ERROR),
             attachments=[attachments],
             username=f"{self._project_name.lower()}-logger",
-            icon_emoji=":robot_face:"
+            icon_emoji=self._icon_emoji
         )
 
     def _write_error_log_and_post(self,
