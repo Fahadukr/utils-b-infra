@@ -42,6 +42,7 @@ class SlackLogger:
             project_name: str,
             slack_token: str,
             subprocess: str = None,
+            add_subprocess_to_info: bool = True,
             default_channel_id: str = None,
             info_channel_id: str = None,
             error_channel_id: str = None,
@@ -53,6 +54,7 @@ class SlackLogger:
         :param project_name: name of the project for logging purposes (used in the username of the slack bot)
         :param slack_token: Slack API token to authenticate the Slack client.
         :param subprocess: (Optional) Name of the subprocess for logging context. This will be prefixed to messages.
+        :param add_subprocess_to_info: Whether to include the subprocess name in info messages. Default to True.
         :param default_channel_id: default Slack channel ID to send messages to if no specific channel is provided.
         :param info_channel_id: default Slack channel ID for info messages.
         :param error_channel_id: default Slack channel ID for error messages.
@@ -79,6 +81,7 @@ class SlackLogger:
 
         self._last_messages = []
         self._subprocess = subprocess
+        self._add_subprocess_to_info = add_subprocess_to_info
 
     def _get_bot_emoji(self) -> str:
         """
@@ -107,6 +110,7 @@ class SlackLogger:
     def clone(self,
               *,
               subprocess: str = None,
+              add_subprocess_to_info: bool = True,
               default_channel_id: str = None,
               info_channel_id: str = None,
               error_channel_id: str = None,
@@ -119,6 +123,7 @@ class SlackLogger:
             project_name=self._project_name,
             slack_token=self._slack_client.token,
             subprocess=subprocess or self._subprocess,
+            add_subprocess_to_info=add_subprocess_to_info if add_subprocess_to_info is not None else self._add_subprocess_to_info,
             default_channel_id=default_channel_id or self._default_channel_id,
             info_channel_id=info_channel_id or self._info_channel_id,
             error_channel_id=error_channel_id or self._error_channel_id,
@@ -157,6 +162,13 @@ class SlackLogger:
         message = level.prefix + message
 
         subprocess_name = subprocess or self._subprocess
+
+        if level == SlackLogLevel.INFO and not self._add_subprocess_to_info:
+            """
+            Do not include subprocess in info messages unless explicitly included in the constructor.
+            This allows cleaner info messages without subprocess context.
+            """
+            subprocess_name = None
 
         message = f"[{subprocess_name}]: {message}" if subprocess_name else message
 
