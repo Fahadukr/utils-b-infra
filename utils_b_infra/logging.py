@@ -1,12 +1,36 @@
 import hashlib
+import json
 import os
 import traceback
-from datetime import datetime, timedelta
+from datetime import datetime, date, time
+from datetime import timedelta
+from decimal import Decimal
 from enum import Enum
+from pathlib import Path
 from typing import Any
+from uuid import UUID
 
 import sys
 from slack_sdk import WebClient as SlackWebClient
+
+
+def safe_serialize(obj):
+    if isinstance(obj, (datetime, date, time)):
+        return obj.isoformat()
+    if isinstance(obj, (set, frozenset)):
+        return list(obj)
+    if isinstance(obj, (bytes, bytearray)):
+        try:
+            return obj.decode()
+        except Exception:
+            return str(obj)
+    if isinstance(obj, (Decimal, UUID, Path, Enum, complex)):
+        return str(obj)
+    if isinstance(obj, Exception):
+        return str(obj)
+    if hasattr(obj, '__dict__'):
+        return vars(obj)
+    return str(obj)
 
 
 class SlackLogLevel(str, Enum):
@@ -144,6 +168,16 @@ class SlackLogger:
         """
         return hashlib.md5(error_text.encode()).hexdigest()
 
+    @staticmethod
+    def _serialize_context_data(context_data: Any) -> str:
+        """
+        Serialize context data to a string format for logging.
+        """
+        if isinstance(context_data, str):
+            return context_data
+
+        return json.dumps(context_data, indent=4, default=safe_serialize)
+
     def _post_to_slack(self,
                        message: str,
                        level: SlackLogLevel,
@@ -225,22 +259,26 @@ class SlackLogger:
     def error(self,
               exc: Exception,
               header_message: str,
-              error_additional_data: Any = None,
+              context_data: Any = None,
               channel_id: str = None,
               subprocess: str = None,
               color: str = None) -> None:
         """
         :param exc: Exception object appears as red text in slack.
         :param header_message: bold text appears above the error message - usually the place where the error occurred
-        :param error_additional_data: Additional data to be added to the error message like variables, etc.
+        :param context_data: Additional data to be added to the error message like variables, API json payload, etc.
         :param channel_id: Slack channel ID to send the message to, if different from the default
         :param subprocess: Optional subprocess name to include in the message.
         :param color: Optional HEX or Slack-supported color ('good', 'warning', 'danger').
         :return: None
         """
         error_text = ''.join(traceback.format_exception(None, exc, exc.__traceback__))
-        if error_additional_data:
-            error_text += f"\n\nAdditional data:\n{error_additional_data}"
+        if context_data:
+            context_data = self._serialize_context_data(context_data)
+            error_text += f"\n\nContext data:\n{context_data}"
+
+            if header_message:
+                header_message += f"\nContext data:\n{context_data}"
 
         error_hash = self._hash_error(error_text)
         two_minutes_ago = datetime.now() - timedelta(minutes=2)
@@ -260,17 +298,23 @@ class SlackLogger:
 
     def info(self,
              message: str,
+             context_data: Any = None,
              channel_id: str = None,
              subprocess: str = None,
              color: str = None) -> None:
         """
         Post an info message to Slack with green color.
         :param message: message appears as an info message in slack without error
+        :param context_data: Additional data to be added to the info message like variables, API json payload, etc.
         :param channel_id: Slack channel ID to send the message to, if different from the default
         :param color: Optional HEX or Slack-supported color ('good', 'warning', 'danger').
         :param subprocess: Optional subprocess name to include in the message.
         :return: None
         """
+        if context_data:
+            context_data = self._serialize_context_data(context_data)
+            message += f"\n\nContext data:\n{context_data}"
+
         self._post_to_slack(
             message=message,
             level=SlackLogLevel.INFO,
@@ -281,17 +325,22 @@ class SlackLogger:
 
     def warning(self,
                 message: str,
+                context_data: Any = None,
                 channel_id: str = None,
                 subprocess: str = None,
                 color: str = None) -> None:
         """
         Post a warning message to Slack with yellow color.
         :param message: message appears as a warning message in slack without error
+        :param context_data: Additional data to be added to the warning message like variables, API json payload, etc.
         :param channel_id: Slack channel ID to send the message to, if different from the default
         :param subprocess: Optional subprocess name to include in the message.
         :param color: Optional HEX or Slack-supported color ('good', 'warning', 'danger').
         :return: None
         """
+        if context_data:
+            context_data = self._serialize_context_data(context_data)
+            message += f"\n\nContext data:\n{context_data}"
         self._post_to_slack(
             message=message,
             level=SlackLogLevel.WARNING,
@@ -302,17 +351,22 @@ class SlackLogger:
 
     def debug(self,
               message: str,
+              context_data: Any = None,
               channel_id: str = None,
               subprocess: str = None,
               color: str = None) -> None:
         """
         Post a debug message to Slack with gray color.
         :param message: message appears as a debug message in slack without error
+        :param context_data: Additional data to be added to the debug message like variables, API json payload, etc.
         :param channel_id: Slack channel ID to send the message to, if different from the default
         :param subprocess: Optional subprocess name to include in the message.
         :param color: Optional HEX or Slack-supported color ('good', 'warning', 'danger').
         :return: None
         """
+        if context_data:
+            context_data = self._serialize_context_data(context_data)
+            message += f"\n\nContext data:\n{context_data}"
         self._post_to_slack(
             message=message,
             level=SlackLogLevel.DEBUG,

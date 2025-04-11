@@ -1,5 +1,12 @@
 # Changelog
 
+[0.1.0] - 2025-04-11
+
+- Add support for processing files in the `ai.TextGenerator` class (both url and local file)
+- Rename `parse_json_response` to `json_mode` in `ai.TextGenerator.generate_ai_response` - breaks older versions
+- Rename `error_additional_data` to `context_data` in `logging.SlackLogger.error()` - breaks older versions
+- Add support for `context_data` in `SlackLogger.info`, `logging.SlackLogger.warning` and `SlackLogger.debug`
+
 [0.8.0] - 2025-04-01
 
 - Add support for Slack message levels and prefixes
