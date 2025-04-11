@@ -89,10 +89,10 @@ class TextGenerator:
                              user_text: Any = None,
                              gpt_model: str = 'gpt-4o',
                              answer_tokens: int = None,
-                             temperature: int = 0.7,
-                             frequency_penalty: int = 0,
-                             presence_penalty: int = 0,
-                             top_p: int = 1,
+                             temperature: float = 0.7,
+                             frequency_penalty: float = 0,
+                             presence_penalty: float = 0,
+                             top_p: float = 1,
                              json_mode: bool = False,
                              **kwargs) -> dict | str:
 
