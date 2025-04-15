@@ -352,3 +352,13 @@ def date_formatter(date,
         return None
 
     return None
+
+
+def seconds_to_hhmmss(seconds: int) -> str:
+    if not is_numeric_value(seconds):
+        raise ValueError("Input must be a numeric value representing seconds.")
+    seconds = int(seconds)
+    hours = seconds // 3600
+    minutes = (seconds % 3600) // 60
+    secs = seconds % 60
+    return f"{hours:02}:{minutes:02}:{secs:02}"
