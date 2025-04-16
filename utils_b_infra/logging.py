@@ -258,7 +258,7 @@ class SlackLogger:
 
     def error(self,
               exc: Exception,
-              header_message: str,
+              header_message: str = None,
               context_data: Any = None,
               channel_id: str = None,
               subprocess: str = None,
@@ -275,10 +275,11 @@ class SlackLogger:
         error_text = ''.join(traceback.format_exception(None, exc, exc.__traceback__))
         if context_data:
             context_data = self._serialize_context_data(context_data)
-            error_text += f"\n\nContext data:\n{context_data}"
 
             if header_message:
                 header_message += f"\nContext data:\n{context_data}"
+            else:
+                header_message = f"Context data:\n{context_data}"
 
         error_hash = self._hash_error(error_text)
         two_minutes_ago = datetime.now() - timedelta(minutes=2)
