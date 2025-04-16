@@ -181,9 +181,9 @@ class SlackLogger:
     def _post_to_slack(self,
                        message: str,
                        level: SlackLogLevel,
+                       subprocess: str = None,
                        error_text: str = None,
                        channel_id: str = None,
-                       subprocess: str = None,
                        color: str = None) -> None:
         """ Post ordinary messages as warning or error messages as danger
         :param message: message to post
@@ -258,17 +258,17 @@ class SlackLogger:
 
     def error(self,
               exc: Exception,
+              subprocess: str = None,
               header_message: str = None,
               context_data: Any = None,
               channel_id: str = None,
-              subprocess: str = None,
               color: str = None) -> None:
         """
         :param exc: Exception object appears as red text in slack.
+        :param subprocess: Optional subprocess name to include in the message.
         :param header_message: bold text appears above the error message - usually the place where the error occurred
         :param context_data: Additional data to be added to the error message like variables, API json payload, etc.
         :param channel_id: Slack channel ID to send the message to, if different from the default
-        :param subprocess: Optional subprocess name to include in the message.
         :param color: Optional HEX or Slack-supported color ('good', 'warning', 'danger').
         :return: None
         """
@@ -299,17 +299,17 @@ class SlackLogger:
 
     def info(self,
              message: str,
+             subprocess: str = None,
              context_data: Any = None,
              channel_id: str = None,
-             subprocess: str = None,
              color: str = None) -> None:
         """
         Post an info message to Slack with green color.
         :param message: message appears as an info message in slack without error
+        :param subprocess: Optional subprocess name to include in the message.
         :param context_data: Additional data to be added to the info message like variables, API json payload, etc.
         :param channel_id: Slack channel ID to send the message to, if different from the default
         :param color: Optional HEX or Slack-supported color ('good', 'warning', 'danger').
-        :param subprocess: Optional subprocess name to include in the message.
         :return: None
         """
         if context_data:
@@ -326,16 +326,16 @@ class SlackLogger:
 
     def warning(self,
                 message: str,
+                subprocess: str = None,
                 context_data: Any = None,
                 channel_id: str = None,
-                subprocess: str = None,
                 color: str = None) -> None:
         """
         Post a warning message to Slack with yellow color.
         :param message: message appears as a warning message in slack without error
+        :param subprocess: Optional subprocess name to include in the message.
         :param context_data: Additional data to be added to the warning message like variables, API json payload, etc.
         :param channel_id: Slack channel ID to send the message to, if different from the default
-        :param subprocess: Optional subprocess name to include in the message.
         :param color: Optional HEX or Slack-supported color ('good', 'warning', 'danger').
         :return: None
         """
@@ -352,16 +352,16 @@ class SlackLogger:
 
     def debug(self,
               message: str,
+              subprocess: str = None,
               context_data: Any = None,
               channel_id: str = None,
-              subprocess: str = None,
               color: str = None) -> None:
         """
         Post a debug message to Slack with gray color.
         :param message: message appears as a debug message in slack without error
+        :param subprocess: Optional subprocess name to include in the message.
         :param context_data: Additional data to be added to the debug message like variables, API json payload, etc.
         :param channel_id: Slack channel ID to send the message to, if different from the default
-        :param subprocess: Optional subprocess name to include in the message.
         :param color: Optional HEX or Slack-supported color ('good', 'warning', 'danger').
         :return: None
         """
