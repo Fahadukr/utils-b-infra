@@ -8,7 +8,7 @@ with open('CHANGELOG.md', 'r') as ch:
 
 setup(
     name="utils_b_infra",
-    version="1.1.1",
+    version="1.2.3",
     author="Fahad Mawlood",
     author_email="fahadukr@gmail.com",
     description="A collection of utility functions and classes for Python projects.",
@@ -30,7 +30,8 @@ setup(
         "google-auth-httplib2",
         "google-auth-oauthlib",
         "Pillow",
-        "pdf2image"
+        "pdf2image",
+        "pydub"
     ],
     extras_require={
         'translation': [

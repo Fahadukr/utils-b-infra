@@ -1,6 +1,10 @@
 # Changelog
 
-[0.1.0] - 2025-04-11
+[1.1.0] - 2025-04-16
+
+- Add support for processing audio files in `ai.TextGenerator`;
+
+[1.0.0] - 2025-04-11
 
 - Add support for processing files in the `ai.TextGenerator` class (both url and local file)
 - Rename `parse_json_response` to `json_mode` in `ai.TextGenerator.generate_ai_response` - breaks older versions
