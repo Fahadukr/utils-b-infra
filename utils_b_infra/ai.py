@@ -244,7 +244,7 @@ class TextGenerator:
 
     def process_text_file(self,
                           prompt: str,
-                          model: str,
+                          model: str = 'gpt-4.1',
                           url: str = None,
                           file_path: str = None,
                           temperature: float = 0.2,
@@ -283,8 +283,9 @@ class TextGenerator:
     def transcribe_audio_file(self,
                               url: str = None,
                               file_path: str = None,
+                              model: str = "gpt-4o-transcribe",
                               prompt: str = None,
-                              model: str = "gpt-4o-transcribe") -> str:
+                              ) -> str:
         """
         Transcribe an audio file (e.g., .oga, .mp3, .wav) to text using OpenAI's transcription model.
         Supports input from a URL or a local file. If both are provided, URL takes precedence.
