@@ -107,7 +107,7 @@ class TextGenerator:
         if json_mode:
             kwargs.setdefault('response_format', {"type": "json_object"})
 
-        if gpt_model in ('o1', 'o1-mini', 'o3-mini'):
+        if gpt_model in ('o1', 'o1-mini', 'o3-mini', 'o3', 'o4-mini'):
             if not kwargs.get('reasoning_effort'):
                 raise ValueError('reasoning_effort is required for reasoning models')
 
