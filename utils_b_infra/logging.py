@@ -193,7 +193,7 @@ class SlackLogger:
         :param color: Optional HEX or Slack-supported color ('good', 'warning', 'danger').
         """
 
-        message = level.prefix + message
+        message = level.prefix + message if message else level.prefix
 
         subprocess_name = subprocess or self._subprocess
 
