@@ -8,7 +8,7 @@ with open('CHANGELOG.md', 'r') as ch:
 
 setup(
     name="utils_b_infra",
-    version="1.2.5",
+    version="1.3.0",
     author="Fahad Mawlood",
     author_email="fahadukr@gmail.com",
     description="A collection of utility functions and classes for Python projects.",
@@ -20,7 +20,7 @@ setup(
         "SQLAlchemy",
         "pandas",
         "numpy < 2.0.0",
-        "openai >= 1.11.1",
+        "openai >= 1.74.0",
         "redis",
         "pymongo",
         "pendulum",

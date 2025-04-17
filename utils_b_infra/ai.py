@@ -10,17 +10,10 @@ import openai
 import requests
 import tiktoken
 from PIL import Image
-from openai._types import NotGiven
+from openai._types import NOT_GIVEN
 from pdf2image import convert_from_bytes
 from pydub import AudioSegment
 from utils_b_infra.generic import retry_with_timeout
-
-AI_NO_ANSWER_PHRASES = ["Sorry, I", "AI language model",
-                        "cannot provide", "without any input",
-                        "There is no raw text", "There is no text",
-                        "Please provide "]
-
-NOT_GIVEN = NotGiven()
 
 
 def count_tokens_per_text(text: str) -> int:
@@ -77,6 +70,17 @@ class TextGenerator:
 
     # -------------- TEXT-ONLY FUNCTIONALITY --------------
 
+    @staticmethod
+    def _parse_json(ai_text):
+        for parser in (json.loads, ast.literal_eval):
+            try:
+                return parser(ai_text)
+            except Exception as e:
+                last_exception = e
+                continue
+        print('Error loading JSON from AI text:', last_exception)
+        raise ValueError('Invalid JSON format') from last_exception
+
     @retry_with_timeout(retries=3, timeout=60, initial_delay=10, backoff=2)
     def generate_text_embeddings(self, content, model="text-embedding-3-small"):
         content = content.encode(encoding='ASCII', errors='ignore').decode()
@@ -85,57 +89,82 @@ class TextGenerator:
         return emb.data[0].embedding
 
     @retry_with_timeout(retries=3, timeout=200, initial_delay=10, backoff=2)
-    def generate_ai_response(self,
-                             prompt: str,
-                             user_text: Any = None,
-                             gpt_model: str = 'gpt-4o',
-                             answer_tokens: int = None,
-                             temperature: float = 0.7,
-                             frequency_penalty: float = 0,
-                             presence_penalty: float = 0,
-                             top_p: float = 1,
-                             json_mode: bool = False,
-                             **kwargs) -> dict | str:
+    def generate_ai_response(
+            self,
+            prompt: str,
+            user_text: Any = None,
+            gpt_model: str = 'gpt-4.1',
+            max_output_tokens: int = NOT_GIVEN,
+            temperature: float = 0.7,
+            json_mode: bool = False,
+            **kwargs
+    ) -> dict | str:
+        """
+        Generate AI response for the provided user text.
+        To process file or audio, use process_text_file or transcribe_audio_file.
+
+        :param prompt: Prompt to be used for the AI model
+        :param user_text: Text or JSON object to be used as input
+        :param gpt_model: Model to be used for the AI response
+        :param max_output_tokens: Max output tokens
+        :param temperature: Temperature for the AI model
+        :param json_mode: If True, the response will be in JSON format
+        :param kwargs: Additional parameters for the AI model, supports legacy 'answer_tokens'
+        :return: AI response as a string or JSON object
+        """
+
+        # Handle legacy parameter
+        if 'answer_tokens' in kwargs:
+            print("`answer_tokens` is deprecated. Use `max_output_tokens` instead.")
+            if max_output_tokens is NOT_GIVEN:
+                max_output_tokens = kwargs['answer_tokens']
+
+            # remove kwargs['answer_tokens']
+            del kwargs['answer_tokens']
+        print(max_output_tokens)
 
         if user_text and not isinstance(user_text, str):
             user_text = json.dumps(user_text)
 
-        messages = [{"role": "system", "content": prompt}]
+        # Build the new "input" list
+        input_list = [{
+            "role": "system",
+            "content": [
+                {"type": "input_text", "text": prompt}
+            ]
+        }]
         if user_text:
-            messages.append({"role": "user", "content": user_text})
+            input_list.append({
+                "role": "user",
+                "content": [
+                    {"type": "input_text", "text": user_text}
+                ]
+            })
 
+        # Output format for JSON mode:
+        text_kwargs = {}
         if json_mode:
-            kwargs.setdefault('response_format', {"type": "json_object"})
+            text_kwargs["format"] = {"type": "json_object"}
+        if text_kwargs:
+            kwargs.setdefault("text", text_kwargs)
 
-        if gpt_model in ('o1', 'o1-mini', 'o3-mini', 'o3', 'o4-mini'):
+        if gpt_model in ('o3-mini', 'o3', 'o4-mini'):
+            # Reasoning models
             if not kwargs.get('reasoning_effort'):
                 raise ValueError('reasoning_effort is required for reasoning models')
 
-        ai_text = self.openai_client.chat.completions.create(
+        ai_resp = self.openai_client.responses.create(
             model=gpt_model,
-            messages=messages,
-            max_tokens=answer_tokens if answer_tokens else NOT_GIVEN,
+            input=input_list,
             temperature=temperature,
-            frequency_penalty=frequency_penalty,
-            presence_penalty=presence_penalty,
-            top_p=top_p,
+            max_output_tokens=max_output_tokens,
             **kwargs
         )
 
-        ai_text = ai_text.choices[0].message.content.strip()
-        if ai_text and json_mode:
-            try:
-                ai_text = json.loads(ai_text, strict=False)
-            except:
-                try:
-                    ai_text = ast.literal_eval(ai_text)
-                except Exception as e:
-                    print('error loading json')
-                    raise e
+        ai_text = ai_resp.output_text
 
-        if isinstance(ai_text, str):
-            if any(phrase.lower() in ai_text.lower() for phrase in AI_NO_ANSWER_PHRASES):
-                return ''
+        if ai_text and json_mode:
+            ai_text = self._parse_json(ai_text)
 
         return ai_text
 
