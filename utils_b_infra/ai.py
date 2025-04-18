@@ -121,7 +121,6 @@ class TextGenerator:
 
             # remove kwargs['answer_tokens']
             del kwargs['answer_tokens']
-        print(max_output_tokens)
 
         if user_text and not isinstance(user_text, str):
             user_text = json.dumps(user_text)
