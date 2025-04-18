@@ -176,7 +176,7 @@ class SlackLogger:
         if isinstance(context_data, str):
             return context_data
 
-        return json.dumps(context_data, indent=4, default=safe_serialize)
+        return json.dumps(context_data, indent=4, default=safe_serialize, ensure_ascii=False)
 
     def _post_to_slack(self,
                        message: str,
