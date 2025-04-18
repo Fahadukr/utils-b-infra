@@ -2,6 +2,7 @@ import ast
 import base64
 import io
 import json
+import logging
 import os
 import re
 from typing import List, Union, Any
@@ -115,7 +116,7 @@ class TextGenerator:
 
         # Handle legacy parameter
         if 'answer_tokens' in kwargs:
-            print("`answer_tokens` is deprecated. Use `max_output_tokens` instead.")
+            logging.warning("[DEPRECATION] `answer_tokens` is deprecated. Use `max_output_tokens` instead.")
             if max_output_tokens is NOT_GIVEN:
                 max_output_tokens = kwargs['answer_tokens']
 
