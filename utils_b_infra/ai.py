@@ -166,6 +166,8 @@ class TextGenerator:
         if ai_text and json_mode:
             ai_text = self._parse_json(ai_text)
 
+        ai_text = "" if ai_text == "''" else ai_text
+
         return ai_text
 
     # -------------- IMAGE & FILE HANDLING FUNCTIONALITY --------------
