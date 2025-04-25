@@ -102,7 +102,7 @@ class TextGenerator:
     ) -> dict | str:
         """
         Generate AI response for the provided user text.
-        To process file or audio, use process_text_file or transcribe_audio_file.
+        To process file or audio, use process_file or transcribe_audio_file.
 
         :param prompt: Prompt to be used for the AI model
         :param user_text: Text or JSON object to be used as input
@@ -244,14 +244,14 @@ class TextGenerator:
                     raise e
         return ai_text
 
-    def process_text_file(self,
-                          prompt: str,
-                          model: str = 'gpt-4.1',
-                          url: str = None,
-                          file_path: str = None,
-                          temperature: float = 0.2,
-                          json_mode: bool = False
-                          ) -> dict | str:
+    def process_file(self,
+                     prompt: str,
+                     model: str = 'gpt-4.1',
+                     url: str = None,
+                     file_path: str = None,
+                     temperature: float = 0.2,
+                     json_mode: bool = False
+                     ) -> dict | str:
         """
         Process text files like .pdf, .docx, .txt, etc. from a URL or local file.
         Provide either `url` or `file_path`.
