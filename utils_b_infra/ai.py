@@ -128,7 +128,7 @@ class TextGenerator:
 
         # Build the new "input" list
         input_list = [{
-            "role": "system",
+            "role": "developer" if gpt_model in ('o3-mini', 'o3', 'o4-mini') else "system",
             "content": [
                 {"type": "input_text", "text": prompt}
             ]
@@ -142,24 +142,36 @@ class TextGenerator:
             })
 
         # Output format for JSON mode:
-        text_kwargs = {}
+        request_kwargs = {}
         if json_mode:
-            text_kwargs["format"] = {"type": "json_object"}
-        if text_kwargs:
-            kwargs.setdefault("text", text_kwargs)
+            request_kwargs["text"] = {
+                "format": {
+                    "type": "json_object"
+                }
+            }
 
         if gpt_model in ('o3-mini', 'o3', 'o4-mini'):
             # Reasoning models
-            if not kwargs.get('reasoning_effort'):
-                raise ValueError('reasoning_effort is required for reasoning models')
+            reasoning_effort = kwargs.get('reasoning_effort')
+            if not reasoning_effort or reasoning_effort not in ('high', 'medium', 'low'):
+                raise ValueError(
+                    'reasoning_effort is required for reasoning models and must be one of: high, medium, low')
 
-        ai_resp = self.openai_client.responses.create(
-            model=gpt_model,
-            input=input_list,
-            temperature=temperature,
-            max_output_tokens=max_output_tokens,
-            **kwargs
-        )
+            ai_resp = self.openai_client.responses.create(
+                model=gpt_model,
+                input=input_list,
+                reasoning={"effort": reasoning_effort},
+                store=False,
+                **request_kwargs
+            )
+        else:
+            ai_resp = self.openai_client.responses.create(
+                model=gpt_model,
+                input=input_list,
+                temperature=temperature,
+                max_output_tokens=max_output_tokens,
+                **request_kwargs
+            )
 
         ai_text = ai_resp.output_text
 
