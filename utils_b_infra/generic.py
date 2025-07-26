@@ -13,7 +13,9 @@ from bson import ObjectId
 
 
 class Timer:
-    def __init__(self):
+    def __init__(self, label_prefix="-->> ", label_text="completed in"):
+        self.label_prefix = label_prefix
+        self.label_text = label_text
         self.start = None
         self.end = None
         self.seconds_taken = None
@@ -40,7 +42,7 @@ class Timer:
         return f"{minutes} min {seconds} sec"
 
     def __str__(self):
-        return f"Time taken: {self.formatted_time}"
+        return f"{self.label_prefix}{self.label_text}: {self.formatted_time}"
 
 
 def is_running_locally(env_key: str = 'IS_RUNNING_IN_DOCKER'):
