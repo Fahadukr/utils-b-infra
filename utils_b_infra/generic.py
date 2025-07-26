@@ -17,7 +17,6 @@ class Timer:
         self.start = None
         self.end = None
         self.seconds_taken = None
-        self.minutes_taken = None
 
     def __enter__(self):
         self.start_timer()
@@ -32,8 +31,16 @@ class Timer:
     def stop_timer(self):
         self.end = time.perf_counter()
         self.seconds_taken = self.end - self.start
-        # for minutes convert to format "x min y sec"
-        self.minutes_taken = f"{int(self.seconds_taken // 60)} min {int(self.seconds_taken % 60)} sec"
+
+    @property
+    def formatted_time(self):
+        if self.seconds_taken is None:
+            return "Timer not stopped yet."
+        minutes, seconds = divmod(int(self.seconds_taken), 60)
+        return f"{minutes} min {seconds} sec"
+
+    def __str__(self):
+        return f"Time taken: {self.formatted_time}"
 
 
 def is_running_locally(env_key: str = 'IS_RUNNING_IN_DOCKER'):
