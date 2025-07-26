@@ -32,7 +32,8 @@ class Timer:
     def stop_timer(self):
         self.end = time.perf_counter()
         self.seconds_taken = self.end - self.start
-        self.minutes_taken = self.seconds_taken / 60
+        # for minutes convert to format "x min y sec"
+        self.minutes_taken = f"{int(self.seconds_taken // 60)} min {int(self.seconds_taken % 60)} sec"
 
 
 def is_running_locally(env_key: str = 'IS_RUNNING_IN_DOCKER'):
