@@ -85,6 +85,24 @@ if __name__ == "__main__":
    hello(arg1=1, arg2="test")
 ```
 
+AI Utilities
+
+```python
+from utils_b_infra.ai import TextGenerator
+from openai import OpenAI
+text_generator = TextGenerator(openai_client=OpenAI(api_key='your-openai-api-key'))
+
+response = text_generator.generate_ai_response(
+    prompt="Generate a professional email to a client based on the following text. Return JSON with 'subject' and 'body' fields.",
+    user_text="Dear Client, we are pleased to inform you about our new services...",
+    gpt_model='gpt-5',
+    verbosity="medium",
+    reasoning_effort="high",
+    json_mode=True
+)
+print(response)
+```
+
 Services Utilities
 
 ```python
