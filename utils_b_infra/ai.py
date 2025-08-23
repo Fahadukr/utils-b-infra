@@ -2,10 +2,9 @@ import ast
 import base64
 import io
 import json
-import logging
 import os
 import re
-from typing import List, Union, Any
+from typing import List, Union, Any, Literal
 
 import openai
 import requests
@@ -94,41 +93,41 @@ class TextGenerator:
             self,
             prompt: str,
             user_text: Any = None,
-            gpt_model: str = 'gpt-4.1',
+            gpt_model: str = 'gpt-5',
             max_output_tokens: int = NOT_GIVEN,
-            temperature: float = 0.7,
-            json_mode: bool = False,
-            **kwargs
+            temperature: float = 0.5,
+            verbosity: Literal["low", "medium", "high"] = "medium",
+            reasoning_effort: Literal["minimal", "low", "medium", "high"] = "medium",
+            store: bool = False,
+            json_mode: bool = False
     ) -> dict | str:
         """
         Generate AI response for the provided user text.
         To process file or audio, use process_file or transcribe_audio_file.
+
+        models 5 and o require reasoning_effort and verbosity parameters,
+            and they don't support temperature and max_output_tokens.
+        models 4.x support temperature and max_output_tokens,
+            but don't support reasoning_effort and verbosity parameters.
 
         :param prompt: Prompt to be used for the AI model
         :param user_text: Text or JSON object to be used as input
         :param gpt_model: Model to be used for the AI response
         :param max_output_tokens: Max output tokens
         :param temperature: Temperature for the AI model
+        :param verbosity: Verbosity level for reasoning models
+        :param reasoning_effort: Reasoning effort for reasoning models
+        :param store: If True, the response will be stored in the OpenAI API
         :param json_mode: If True, the response will be in JSON format
-        :param kwargs: Additional parameters for the AI model, supports legacy 'answer_tokens'
         :return: AI response as a string or JSON object
         """
-
-        # Handle legacy parameter
-        if 'answer_tokens' in kwargs:
-            logging.warning("[DEPRECATION] `answer_tokens` is deprecated. Use `max_output_tokens` instead.")
-            if max_output_tokens is NOT_GIVEN:
-                max_output_tokens = kwargs['answer_tokens']
-
-            # remove kwargs['answer_tokens']
-            del kwargs['answer_tokens']
 
         if user_text and not isinstance(user_text, str):
             user_text = json.dumps(user_text)
 
         # Build the new "input" list
         input_list = [{
-            "role": "developer" if gpt_model in ('o3-mini', 'o3', 'o4-mini') else "system",
+            "role": "developer" if gpt_model.startswith('gpt-5') or gpt_model.startswith('o') else "system",
             "content": [
                 {"type": "input_text", "text": prompt}
             ]
@@ -142,29 +141,27 @@ class TextGenerator:
             })
 
         # Output format for JSON mode:
-        request_kwargs = {}
-        if json_mode:
-            request_kwargs["text"] = {
+        request_kwargs = {
+            "text": {
                 "format": {
-                    "type": "json_object"
-                }
+                    "type": "json_object" if json_mode else "text"
+                },
             }
+        }
+        if gpt_model.startswith('gpt-5'):
+            request_kwargs["text"]["verbosity"] = verbosity
 
-        if gpt_model in ('o3-mini', 'o3', 'o4-mini'):
+        if gpt_model.startswith('gpt-5') or gpt_model.startswith('o'):
             # Reasoning models
-            reasoning_effort = kwargs.get('reasoning_effort')
-            if not reasoning_effort or reasoning_effort not in ('high', 'medium', 'low'):
-                raise ValueError(
-                    'reasoning_effort is required for reasoning models and must be one of: high, medium, low')
-
             ai_resp = self.openai_client.responses.create(
                 model=gpt_model,
                 input=input_list,
                 reasoning={"effort": reasoning_effort},
-                store=False,
+                store=store,
                 **request_kwargs
             )
         else:
+            # gpt 4 models
             ai_resp = self.openai_client.responses.create(
                 model=gpt_model,
                 input=input_list,

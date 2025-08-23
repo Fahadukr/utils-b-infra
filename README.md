@@ -4,11 +4,7 @@ client interactions, data manipulation with pandas, and general-purpose function
 
 # Supported Python Versions
 
-Python >= 3.10
-
-# Unsupported Python Versions
-
-Python < 3.10
+Python >= 3.11
 
 ## Installation
 

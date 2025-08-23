@@ -1,4 +1,7 @@
 # Changelog
+[1.3.2] - 2025-08-22
+
+- Add support for gpt-5 models in `ai.TextGenerator` class.
 
 [1.1.0] - 2025-04-16
 
