@@ -88,7 +88,7 @@ class TextGenerator:
         emb = self.openai_client.embeddings.create(input=content, model=model)
         return emb.data[0].embedding
 
-    @retry_with_timeout(retries=3, timeout=200, initial_delay=10, backoff=2)
+    @retry_with_timeout(retries=3, timeout=300, initial_delay=10, backoff=2)
     def generate_ai_response(
             self,
             prompt: str,
