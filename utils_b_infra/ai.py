@@ -1,5 +1,6 @@
 import ast
 import base64
+import inspect
 import io
 import json
 import os
@@ -80,6 +81,13 @@ class TextGenerator:
                 continue
         print('Error loading JSON from AI text:', last_exception)
         raise ValueError('Invalid JSON format') from last_exception
+
+    @staticmethod
+    def _supports_api_param(api_method: Any, param_name: str) -> bool:
+        try:
+            return param_name in inspect.signature(api_method).parameters
+        except (TypeError, ValueError):
+            return False
 
     @retry_with_timeout(retries=3, timeout=60, initial_delay=10, backoff=2)
     def generate_text_embeddings(self, content, model="text-embedding-3-small"):
@@ -167,6 +175,7 @@ class TextGenerator:
                 input=input_list,
                 temperature=temperature,
                 max_output_tokens=max_output_tokens,
+                store=store,
                 **request_kwargs
             )
 
@@ -227,17 +236,24 @@ class TextGenerator:
                                 system_prompt: str,
                                 images: List[Image.Image],
                                 temperature: float = 0.2,
-                                json_mode: bool = False
+                                json_mode: bool = False,
+                                store: bool = False
                                 ) -> dict | str:
 
         messages = [{"role": "system", "content": system_prompt}]
         messages.append(self._build_image_prompt(images))
 
+        request_kwargs = {
+            "model": model,
+            "messages": messages,
+            "response_format": {"type": "json_object"} if json_mode else NOT_GIVEN,
+            "temperature": temperature,
+        }
+        if self._supports_api_param(self.openai_client.chat.completions.create, "store"):
+            request_kwargs["store"] = store
+
         gpt_answer = self.openai_client.chat.completions.create(
-            model=model,
-            messages=messages,
-            response_format={"type": "json_object"} if json_mode else NOT_GIVEN,
-            temperature=temperature
+            **request_kwargs
         )
 
         ai_text = gpt_answer.choices[0].message.content
@@ -259,7 +275,8 @@ class TextGenerator:
                      url: str = None,
                      file_path: str = None,
                      temperature: float = 0.2,
-                     json_mode: bool = False
+                     json_mode: bool = False,
+                     store: bool = False
                      ) -> dict | str:
         """
         Process text files like .pdf, .docx, .txt, etc. from a URL or local file.
@@ -288,7 +305,25 @@ class TextGenerator:
             system_prompt=prompt,
             images=images,
             temperature=temperature,
-            json_mode=json_mode
+            json_mode=json_mode,
+            store=store
+        )
+
+    def process_local_file(self,
+                           prompt: str,
+                           file_path: str,
+                           model: str = 'gpt-4.1',
+                           temperature: float = 0.2,
+                           json_mode: bool = False,
+                           store: bool = False
+                           ) -> dict | str:
+        return self.process_file(
+            prompt=prompt,
+            model=model,
+            file_path=file_path,
+            temperature=temperature,
+            json_mode=json_mode,
+            store=store
         )
 
     def transcribe_audio_file(self,
@@ -296,6 +331,7 @@ class TextGenerator:
                               file_path: str = None,
                               model: str = "gpt-4o-transcribe",
                               prompt: str = None,
+                              store: bool = False,
                               ) -> str:
         """
         Transcribe an audio file (e.g., .oga, .mp3, .wav) to text using OpenAI's transcription model.
@@ -334,11 +370,15 @@ class TextGenerator:
             audio_bytes.seek(0)
             audio_bytes.name = f"audio.{audio_format}"
 
-        transcription = self.openai_client.audio.transcriptions.create(
-            model=model,
-            file=audio_bytes,
-            response_format="text",
-            prompt=prompt if prompt else NOT_GIVEN,
-        )
+        request_kwargs = {
+            "model": model,
+            "file": audio_bytes,
+            "response_format": "text",
+            "prompt": prompt if prompt else NOT_GIVEN,
+        }
+        if self._supports_api_param(self.openai_client.audio.transcriptions.create, "store"):
+            request_kwargs["store"] = store
+
+        transcription = self.openai_client.audio.transcriptions.create(**request_kwargs)
 
         return transcription
