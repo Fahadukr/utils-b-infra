@@ -1,4 +1,8 @@
 # Changelog
+[1.4.3] - 2026-05-08
+
+- Normalize transcription audio inputs to mono MP3 before sending them to OpenAI.
+
 [1.3.2] - 2025-08-22
 
 - Add support for gpt-5 models in `ai.TextGenerator` class.
