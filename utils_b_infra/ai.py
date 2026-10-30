@@ -12,7 +12,7 @@ import openai
 import requests
 import tiktoken
 from PIL import Image
-from openai._types import NOT_GIVEN
+from openai import NOT_GIVEN, NotGiven
 from pdf2image import convert_from_bytes
 from pydub import AudioSegment
 from utils_b_infra.generic import retry_with_timeout
@@ -102,16 +102,23 @@ class TextGenerator:
         emb = self.openai_client.embeddings.create(input=content, model=model)
         return emb.data[0].embedding
 
-    @retry_with_timeout(retries=3, timeout=300, initial_delay=10, backoff=2)
+    @retry_with_timeout(
+        retries=3, timeout=300, initial_delay=10, backoff=2,
+        retry_if=lambda error: (
+            not isinstance(error, openai.APIStatusError)
+            or error.status_code in (408, 409, 429)
+            or error.status_code >= 500
+        ),
+    )
     def generate_ai_response(
             self,
             prompt: str,
             user_text: Any = None,
             gpt_model: str = 'gpt-5',
-            max_output_tokens: int = NOT_GIVEN,
-            temperature: float = 0.5,
-            verbosity: Literal["low", "medium", "high"] = "medium",
-            reasoning_effort: Literal["minimal", "low", "medium", "high"] = "medium",
+            max_output_tokens: int | NotGiven = NOT_GIVEN,
+            temperature: float | NotGiven = NOT_GIVEN,
+            verbosity: Literal["low", "medium", "high"] | NotGiven = NOT_GIVEN,
+            reasoning_effort: str | NotGiven = NOT_GIVEN,
             store: bool = False,
             json_mode: bool = False
     ) -> dict | str:
@@ -119,10 +126,10 @@ class TextGenerator:
         Generate AI response for the provided user text.
         To process file or audio, use process_file or transcribe_audio_file.
 
-        models 5 and o require reasoning_effort and verbosity parameters,
-            and they don't support temperature and max_output_tokens.
-        models 4.x support temperature and max_output_tokens,
-            but don't support reasoning_effort and verbosity parameters.
+        Model IDs are passed through unchanged. Optional generation settings
+        are sent only when supplied; otherwise the API uses the model's defaults.
+        The API validates support for explicitly supplied options. Settings are
+        never inferred from a model name or silently removed after an error.
 
         :param prompt: Prompt to be used for the AI model
         :param user_text: Text or JSON object to be used as input
@@ -139,12 +146,11 @@ class TextGenerator:
         if user_text and not isinstance(user_text, str):
             user_text = json.dumps(user_text)
 
-        # Build the new "input" list
+        # Keep the prompt in input: JSON mode validates these messages, and
+        # prompt-only calls must still supply a nonempty input list.
         input_list = [{
-            "role": "developer" if gpt_model.startswith('gpt-5') or gpt_model.startswith('o') else "system",
-            "content": [
-                {"type": "input_text", "text": prompt}
-            ]
+            "role": "developer",
+            "content": [{"type": "input_text", "text": prompt}],
         }]
         if user_text:
             input_list.append({
@@ -154,36 +160,26 @@ class TextGenerator:
                 ]
             })
 
-        # Output format for JSON mode:
         request_kwargs = {
+            "model": gpt_model,
+            "input": input_list,
+            "store": store,
             "text": {
                 "format": {
                     "type": "json_object" if json_mode else "text"
                 },
             }
         }
-        if gpt_model.startswith('gpt-5'):
+        if verbosity is not NOT_GIVEN:
             request_kwargs["text"]["verbosity"] = verbosity
+        if reasoning_effort is not NOT_GIVEN:
+            request_kwargs["reasoning"] = {"effort": reasoning_effort}
+        if temperature is not NOT_GIVEN:
+            request_kwargs["temperature"] = temperature
+        if max_output_tokens is not NOT_GIVEN:
+            request_kwargs["max_output_tokens"] = max_output_tokens
 
-        if gpt_model.startswith('gpt-5') or gpt_model.startswith('o'):
-            # Reasoning models
-            ai_resp = self.openai_client.responses.create(
-                model=gpt_model,
-                input=input_list,
-                reasoning={"effort": reasoning_effort},
-                store=store,
-                **request_kwargs
-            )
-        else:
-            # gpt 4 models
-            ai_resp = self.openai_client.responses.create(
-                model=gpt_model,
-                input=input_list,
-                temperature=temperature,
-                max_output_tokens=max_output_tokens,
-                store=store,
-                **request_kwargs
-            )
+        ai_resp = self.openai_client.responses.create(**request_kwargs)
 
         ai_text = ai_resp.output_text
 

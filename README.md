@@ -87,6 +87,13 @@ if __name__ == "__main__":
 
 AI Utilities
 
+`generate_ai_response` passes the model ID directly to the Responses API. It
+does not maintain a model list or infer capabilities from a model's name.
+Choose the model and generation settings in the application configuration.
+`reasoning_effort`, `verbosity`, `temperature` and `max_output_tokens` are sent
+only when explicitly provided. Unsupported settings produce the original API
+error immediately; they are not silently discarded or retried unchanged.
+
 ```python
 from utils_b_infra.ai import TextGenerator
 from openai import OpenAI
@@ -102,6 +109,23 @@ response = text_generator.generate_ai_response(
 )
 print(response)
 ```
+
+For a model that supports sampling, pass `temperature` explicitly and omit
+`reasoning_effort` unless the model supports the combination. The API validates
+the options; no model catalog lookup or extra discovery request is needed.
+
+When upgrading from 1.4.x, omitted generation options now use the model's API
+defaults. To preserve the previous wrapper settings, explicitly supply
+`temperature=0.5` for sampling calls, or `reasoning_effort="medium"` and
+`verbosity="medium"` where supported. An explicit `max_output_tokens` is now
+honored for every model and includes reasoning tokens as well as visible text.
+The return type, JSON parsing and `store=False` default are unchanged.
+
+Review calls that supplied `temperature` to reasoning models: older releases
+silently ignored that argument, while this release sends it and lets the API
+validate it. Remove unwanted arguments before upgrading those applications.
+Version `1.5.0rc1` is a prerelease so consumers can opt in individually, without
+changing ordinary stable-version installs. Pin the chosen version per service.
 
 Services Utilities
 

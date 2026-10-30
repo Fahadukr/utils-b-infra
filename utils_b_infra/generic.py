@@ -54,7 +54,7 @@ def is_running_locally(env_key: str = 'IS_RUNNING_IN_DOCKER'):
     return not os.getenv(env_key, False) == 'true'
 
 
-def retry_with_timeout(retries=3, timeout=60, initial_delay=10, backoff=2):
+def retry_with_timeout(retries=3, timeout=60, initial_delay=10, backoff=2, retry_if=None):
     """
     A decorator for retrying a function if it doesn't complete within 'timeout' seconds or if it raises an error.
 
@@ -66,6 +66,8 @@ def retry_with_timeout(retries=3, timeout=60, initial_delay=10, backoff=2):
     :param timeout: The function timeout in seconds.
     :param initial_delay: The initial wait between retries.
     :param backoff: The backoff multiplier for the delay.
+    :param retry_if: Optional exception predicate. False propagates the original
+        exception immediately; omitted preserves retrying all exceptions.
     """
 
     def decorator(func):
@@ -90,6 +92,8 @@ def retry_with_timeout(retries=3, timeout=60, initial_delay=10, backoff=2):
                             msg += f", no attempts left, raising exception..."
                         print(msg)
                     except Exception as e:
+                        if retry_if is not None and not retry_if(e):
+                            raise
                         last_exception = e
                         msg = f"Function {func.__name__} raised an exception: {e}"
                         if attempts_left > 0:

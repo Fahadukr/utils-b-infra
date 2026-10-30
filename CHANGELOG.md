@@ -1,4 +1,22 @@
 # Changelog
+
+[1.5.0rc1] - 2026-10-30
+
+- Remove model-name routing from `TextGenerator.generate_ai_response`. Pass model
+  IDs unchanged and send reasoning, verbosity, temperature and token limits only
+  when explicitly supplied. New models no longer require library changes.
+- Use a consistent developer message for the prompt instead of choosing its role
+  from the model name. Preserve prompt-only calls, JSON parsing and `store=False`.
+- Generation options now use API defaults when omitted. Specify
+  `temperature=0.5`, `reasoning_effort="medium"` or `verbosity="medium"` explicitly
+  when the previous wrapper defaults are required and supported by the model.
+- Honor explicit `max_output_tokens` for reasoning requests as well as sampling
+  requests. This limit includes reasoning tokens.
+- Propagate non-retryable API errors immediately, preserving their original type
+  and details. Retain retries for transient errors and other existing failures.
+- Stage the new behavior as a prerelease. Consumers must explicitly opt in;
+  ordinary installs of stable releases should not change generation defaults.
+
 [1.4.3] - 2026-05-08
 
 - Normalize transcription audio inputs to mono MP3 before sending them to OpenAI.
